@@ -1,0 +1,40 @@
+# graphify-oss adapter configuration for OrgMemBench
+#
+# Upstream: safishamsi/graphify, branch v8
+# Commit:   b07f0eb6a7d336142430a6c64ef23ae013255690
+# Package:  graphifyy==0.8.20
+#
+# Installation (host Python, alternative to Docker):
+#   pip install 'graphifyy==0.8.20' anthropic
+#
+# Docker (recommended for process isolation):
+#   cd docker/graphify-oss
+#   docker compose build
+#   ANTHROPIC_API_KEY=<key> GRAPHIFY_OSS_WORKDIR=/tmp/graphify-oss docker compose up -d
+
+version: "graphify 0.8.20"
+commit: "b07f0eb6a7d336142430a6c64ef23ae013255690"
+
+# LLM backend: "claude" uses Anthropic Claude (default claude-sonnet-4-6).
+# This is graphify's upstream default; no override needed.
+# Controlled by ANTHROPIC_API_KEY.
+
+# Embedding provider: NONE. graphify uses pure BFS/DFS graph traversal
+# for queries. No embedding API key is needed.
+
+# Docker container for process isolation (optional but recommended).
+# When set, the adapter routes all CLI calls through `docker exec`.
+# Leave empty to use the native graphify CLI from PATH.
+#
+# docker_container: "orgmembench-graphify-oss"
+
+# Query token budget: how many tokens of graph traversal output to pass
+# to the answerer. Higher = more context but larger answerer prompt.
+query_budget: 4000
+
+# Working directory for corpus files + graphify-out/.
+# Defaults to a managed tmpdir if not set.
+# workdir: "/tmp/graphify-oss-runs"
+
+# Binary path (if not using Docker and graphify is not on PATH).
+# binary: "/path/to/graphify"

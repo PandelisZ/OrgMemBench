@@ -1,0 +1,183 @@
+%==============================================================================
+% 2. RELATED WORK
+%==============================================================================
+% Drafted from paper/.research/landscape.md (refreshed 2026-05-29) and design.md.
+% Cite keys used (all defined in refs.bib):
+%   gbrain, zep_graphiti_2025, mem0_2024, graphify_oss            (systems)
+%   maharana2024locomo, wu2024longmemeval, beam2025,
+%   hu2025memoryagentbench, memorybench2025                        (benchmarks)
+%   gebru2021datasheets, croissant2024   (D&B methodology -- now cited in design.tex
+%                                          / main.tex; methodology subsection relocated)
+% Scope discipline: the public field evaluated here is EXACTLY four systems
+% (gbrain, zep-cloud, mem0-platform, graphify-oss). No authors'-own system is
+% referenced anywhere.
+%==============================================================================
+\section{Related Work}
+\label{sec:related}
+
+\bench{} sits at the intersection of three lines of work: the agent-memory
+systems it evaluates, the benchmarks that currently measure them, and the
+broader literature on long-horizon and temporal reasoning. We close the section
+by situating \bench{} against existing benchmarks on the axes that distinguish
+organizational memory (Table~\ref{tab:bench-comparison}).
+
+\subsection{AI Agent Memory Systems}
+\label{sec:related:systems}
+
+A memory system gives an agent persistent state beyond its context window: it
+ingests a stream of text, decides what to store and in what representation, and
+retrieves the relevant fragments when a later query arrives. The four publicly
+available systems we evaluate span the dominant architectural families and make
+sharply different design bets, which is precisely why a benchmark that exercises
+them under a single harness is informative.
+
+\textbf{gbrain} is an open hybrid-retrieval system~\citep{gbrain} that combines
+lexical (BM25), dense vector, and graph-based retrieval over an extracted store,
+then fuses the three signals at query time. The hybrid design is intended to
+recover both surface lexical matches and semantically paraphrased evidence while
+using graph structure to follow relations between entities.
+
+\textbf{Zep}, built on the Graphiti engine~\citep{zep_graphiti_2025}, maintains a
+\emph{temporal knowledge graph}: ingested text is distilled into entities and
+relations whose edges carry validity intervals, so the graph can in principle be
+queried for the state of the world as of a given date and can represent facts that
+were later invalidated. Of the four systems it is architecturally closest to the
+bi-temporal structure \bench{} probes, which makes its performance a useful test
+of whether a temporal-graph representation, on its own, suffices for
+organizational-scale questions.
+
+\textbf{Mem0}~\citep{mem0_2024} follows an extract-and-store paradigm aimed at
+production deployment: an extraction step converts incoming messages into compact
+natural-language memories, with subsequent operations to add, update, or
+invalidate them as new information arrives. The representation is optimized for
+scalable low-latency retrieval of salient personal facts rather than for
+reconstructing a multi-author audit trail.
+
+\textbf{graphify}~\citep{graphify_oss} is an open-source, embedding-free library
+that stores memories as a graph and retrieves by explicit BFS/DFS traversal rather
+than by vector similarity. By avoiding dense embeddings it removes one source of
+opaque approximation, but it also forgoes the soft semantic matching the other
+systems rely on, trading recall on paraphrased evidence for transparent, traversal-based
+retrieval.
+
+{\sloppy These systems are evaluated head-to-head under a uniform protocol, each
+on its vendor-recommended configuration, in Section~\ref{sec:experiments}.\par}
+
+\subsection{Existing Memory Benchmarks}
+\label{sec:related:benchmarks}
+
+The benchmarks that currently define progress on agent memory share one structural
+assumption: memory is a \emph{single narrator's} history, possibly very long.
+
+\textbf{LoCoMo}~\citep{maharana2024locomo} evaluates very-long-term \emph{two-party}
+dialogue grounded in speaker personas and temporally ordered event graphs
+(Table~\ref{tab:bench-comparison}). Its temporal-QA category touches evolving facts,
+but supersession with explicit attribution is not a labeled task, and the corpus is
+a single shared dyadic narrative rather than a multi-author organization. Top
+systems now cluster between roughly 83\% and 93\%; tellingly, the numbers are also
+\emph{disputed}, with different evaluators reporting materially different scores for
+the same systems, which is itself an argument for a neutral, fixed-harness
+benchmark.
+
+\textbf{LongMemEval}~\citep{wu2024longmemeval} measures five memory abilities over
+scalable user-assistant chat. Crucially, its knowledge-update and temporal
+categories operate \emph{within one user's own stated facts}: there is no
+multi-author corpus, no channel heterogeneity, and no role structure. Leading
+systems now exceed 83\%.
+
+\textbf{BEAM}~\citep{beam2025} pushes the \emph{volume} frontier, with ten memory
+tasks (including knowledge update, contradiction resolution, event ordering, and
+abstention) over coherent \emph{single-narrator} conversations generated up to 10M
+tokens across two tracks (1M and 10M). At extreme scale it is not saturated:
+reported best accuracy is about 64\% at 1M tokens and about 49\% at 10M. But the
+challenge it poses is one of how \emph{much} a single narrator said, not of
+\emph{who} said what across an organization; it varies length, not source
+heterogeneity.
+
+\textbf{MemoryAgentBench}~\citep{hu2025memoryagentbench} shifts toward agentic,
+incremental multi-turn interaction over chunked inputs, a meaningful move beyond
+static QA, but it still models one agent processing one input stream. Related
+continual-learning and memory-hallucination benchmarks, including
+MemoryBench~\citep{memorybench2025}, share the same single-user, personal-scale
+framing and are not analyzed individually here.
+
+The common thread is that near-saturation on LoCoMo and LongMemEval does not show
+that memory is solved; it shows the benchmarks have stopped measuring the hard
+part. Table~\ref{tab:bench-comparison} makes the gap concrete on the decisive
+axes: \emph{modality}, where prior work is two-party, single-narrator, or
+user--assistant dialogue while \bench{} is a multi-channel organizational corpus
+authored by many distinct people; and \emph{scale}, where prior work grows one
+narrator's history in \emph{length} (to ${\sim}1$M and 10M tokens) while \bench{}
+instead grows \emph{breadth}---more authors, channels, and a multi-year timeline.
+The remaining axes are where prior work is uniformly weak: none varies author
+count (\emph{multi-source}), and although several include knowledge-update QA, none
+treats \emph{supersession}---a fact invalidated and replaced, carrying an
+attributed reason and date---as a first-class, labeled reasoning category.
+
+\subsection{Long-Horizon and Temporal Reasoning}
+\label{sec:related:temporal}
+
+Beyond memory systems specifically, \bench{} draws on two strands of work on
+temporal reasoning in language. The first concerns \emph{long-context} models and
+retrieval-augmented generation, where a recurring finding is that the ability to
+\emph{attend} to a long input is not the ability to \emph{reason} over information
+distributed across it. The second concerns \emph{temporal} structure:
+distinguishing valid-time (when a fact held in the world) from ingest-time (when it
+was recorded), and reconstructing knowledge as of a past date. \bench{} makes this
+structure first-class through the bi-temporal source-of-truth graph described in
+\S\ref{sec:design}, and it is the dimension on which we observe the sharpest
+degradation across all evaluated systems.
+
+% COMPARISON TABLE: OrgMemBench vs existing benchmarks on the axes that define
+% organizational memory. booktabs, no vertical rules (guide 1.6). SOTA / scale
+% facts from landscape.md; OrgMemBench medium leaderboard is planned (see note).
+\begin{table}[t]
+  \centering
+  \caption{\textbf{\bench{} versus existing memory benchmarks.} To our knowledge
+    the first benchmark to target multi-source, multi-author organizational memory
+    with bi-temporal supersession as a labeled reasoning category. The axes are
+    walked through in the text (\S\ref{sec:related:benchmarks}).}
+  \label{tab:bench-comparison}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}l p{2.5cm} p{2.5cm} l c c c@{}}
+    \toprule
+    & & & Temporal & Multi- & Super- & Public \\
+    Benchmark & Modality & Scale & span & source & session & leaderboard \\
+    \midrule
+    LoCoMo
+      & Dyadic dialogue + image
+      & $\sim$9K tok/conv (50)
+      & Up to 35 sess.
+      & No
+      & Partial
+      & Informal \\
+    LongMemEval
+      & User--assistant chat
+      & 128K\,$\rightarrow\sim$1M tok
+      & Multi-session
+      & No
+      & Yes
+      & Yes \\
+    BEAM
+      & Single-narrator dialogue
+      & Up to 10M tok/conv
+      & $\sim$1 year
+      & No
+      & Yes
+      & Yes \\
+    \midrule
+    \bench{} (ours)
+      & Multi-channel org.\ corpus
+      & $\sim$63K (S) / ${>}200$K (M) tok
+      & Multi-year
+      & Yes
+      & Yes
+      & Planned \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  {\footnotesize ``Partial'' for LoCoMo reflects its temporal-QA category, which
+  touches evolving facts but does not label supersession with attribution. Token
+  scales are approximate; \bench{} figures are plain-text corpus totals.}
+\end{table}

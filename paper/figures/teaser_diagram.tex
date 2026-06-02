@@ -1,0 +1,134 @@
+% =============================================================================
+% figures/teaser_diagram.tex --- OrgMemBench Figure 1 teaser / system diagram.
+%
+% RATIONALE (what this changes vs. the old placeholder, and why).
+% The placeholder was a flat 4-box chain (corpus -> questions -> system ->
+% eval) that hid the one idea that makes OrgMemBench distinctive: a single
+% bi-temporal SOURCE-OF-TRUTH GRAPH is the origin of *both* the multi-channel
+% corpus *and* the questions with their gold answers. This figure makes that
+% DUAL PROJECTION the visual anchor: one graph node fans out to (a) the
+% multi-channel synthetic corpus and (b) the competency-tagged questions with
+% deterministic graph-projected gold answers. It then shows the real eval loop
+% the chain elided: each corpus is ingested by the four systems under test
+% (gbrain / zep-cloud / mem0-platform / graphify-oss), retrieval feeds a shared
+% (or native) answerer, and a rubric-based, capability-aware judge scores the
+% answer *against the graph-projected gold* -> per-category rubric mean ->
+% leaderboard. The six competencies C1-C6 ride along as tags on the questions,
+% and the gold answers visibly trace back to the same graph the judge scores
+% against (the dashed "scored against" link), which is the property the flat
+% chain could not express. Restrained: single orange accent, the rest grey.
+%
+% PREAMBLE main.tex needs (add once):
+%   \usepackage{tikz}
+%   \usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds}
+% DROP-IN for the fig:teaser block (replace the \IfFileExists/\includegraphics):
+%   \input{figures/teaser_diagram}
+% Keep the existing \caption{...}\label{fig:teaser}; do not caption inside here.
+% =============================================================================
+\begin{tikzpicture}[
+    font=\small,
+    node distance=6mm,
+    accent/.style={orange!75!red},
+    % --- the bi-temporal source-of-truth graph (origin) ---
+    graph/.style={cylinder, shape border rotate=90, aspect=0.32, draw=orange!75!red,
+                  very thick, fill=orange!8, minimum width=20mm, minimum height=15mm,
+                  align=center, inner sep=2pt, text=black},
+    % --- generic stage box ---
+    box/.style={draw=black!55, thick, rounded corners=2pt, fill=black!2,
+                align=center, inner sep=4pt, minimum height=9mm, text width=24mm},
+    % --- system-under-test chip ---
+    sys/.style={draw=black!45, semithick, rounded corners=1.5pt, fill=white,
+                font=\scriptsize\ttfamily, inner sep=2.5pt, minimum width=23mm,
+                align=center},
+    % --- competency tag ---
+    tag/.style={draw=orange!70!red, semithick, rounded corners=1pt, fill=orange!10,
+                font=\scriptsize, inner sep=1.6pt, text=black!85},
+    % --- judge / output emphasis ---
+    judge/.style={draw=orange!75!red, very thick, rounded corners=2pt, fill=orange!6,
+                  align=center, inner sep=4pt, minimum height=9mm, text width=26mm},
+    board/.style={draw=black!60, thick, rounded corners=2pt, fill=black!4,
+                  align=center, inner sep=4pt, minimum height=9mm, text width=22mm},
+    flow/.style={-{Latex[length=2mm,width=1.6mm]}, black!65, semithick},
+    proj/.style={-{Latex[length=2mm,width=1.6mm]}, orange!75!red, thick},
+    scored/.style={{Latex[length=1.6mm]}-{Latex[length=1.6mm]}, densely dashed,
+                   orange!75!red, semithick},
+  ]
+
+  % ---- ORIGIN: bi-temporal source-of-truth graph -------------------------
+  \node[graph] (graph) {\textbf{Source-of-truth}\\\textbf{graph}\\[1pt]
+        \scriptsize\itshape bi-temporal\\[-1pt]
+        \scriptsize\ttfamily valid/invalid\\[-2pt]
+        \scriptsize\ttfamily ingested/expired};
+  \node[font=\scriptsize\itshape, text=black!55, above=1mm of graph]
+        {synthetic Helix org};
+
+  % ---- DUAL PROJECTION targets (the key idea) ----------------------------
+  \node[box, above right=6mm and 16mm of graph, text width=27mm] (corpus)
+        {\textbf{Multi-channel corpus}\\[1pt]
+         \scriptsize email $\cdot$ Slack $\cdot$ transcripts\\[-2pt]
+         \scriptsize tickets $\cdot$ docs $\cdot$ CRM};
+  \node[box, below right=6mm and 16mm of graph, text width=27mm] (gold)
+        {\textbf{Questions + gold}\\[1pt]
+         \scriptsize competency-tagged Qs\\[-2pt]
+         \scriptsize deterministic gold answers};
+
+  % competency tags C1-C6 hanging under the questions
+  \node[tag, below=2.5mm of gold] (tags)
+        {C1 supers.\ $\cdot$ C2 prov.\ $\cdot$ C3 bi-temp.\ $\cdot$
+         C4 audit $\cdot$ C5 justif.\ $\cdot$ C6 contra.};
+
+  % projection arrows from the one graph (orange = "projected from graph")
+  \draw[proj] (graph.east) to[out=35,in=180]
+        node[pos=0.55, above=-0.5mm, accent, font=\scriptsize\itshape] {project}
+        (corpus.west);
+  \draw[proj] (graph.east) to[out=-35,in=180] (gold.west);
+
+  % ---- SYSTEMS UNDER TEST -------------------------------------------------
+  \node[box, right=14mm of corpus, text width=15mm, fill=white, draw=black!45]
+        (ingest) {\textbf{ingest}\\\scriptsize+ retrieve};
+  \node[sys, above right=2mm and 9mm of ingest] (s1) {gbrain};
+  \node[sys, below=1.2mm of s1] (s2) {zep-cloud};
+  \node[sys, below=1.2mm of s2] (s3) {mem0-platform};
+  \node[sys, below=1.2mm of s3] (s4) {graphify-oss};
+  \begin{scope}[on background layer]
+    \node[draw=black!30, rounded corners=2pt, fill=black!2, fit=(s1)(s4),
+          inner sep=2.5pt] (systems) {};
+  \end{scope}
+  \node[font=\scriptsize\itshape, text=black!55, above=0.5mm of systems]
+        {memory systems under test};
+
+  \draw[flow] (corpus.east) -- (ingest.west);
+  \draw[flow] (ingest.east) -- (systems.west);
+
+  % ---- ANSWERER -----------------------------------------------------------
+  \node[box, right=10mm of systems, text width=20mm] (answerer)
+        {\textbf{Answerer}\\[1pt]
+         \scriptsize shared neutral\\[-2pt]
+         \scriptsize (or native synth.)};
+  \draw[flow] (systems.east) -- (answerer.west);
+
+  % ---- JUDGE (capability-aware, rubric) ----------------------------------
+  \node[judge, below=12mm of answerer] (judge)
+        {\textbf{Capability-aware judge}\\[1pt]
+         \scriptsize rubric facet coverage\\[-2pt]
+         \scriptsize readiness-gated};
+  \draw[flow] (answerer.south) -- node[right=0.5mm, font=\scriptsize, text=black!60]
+        {answer} (judge.north);
+
+  % ---- LEADERBOARD --------------------------------------------------------
+  \node[board, left=12mm of judge] (board)
+        {\textbf{Leaderboard}\\[1pt]
+         \scriptsize per-category\\[-2pt]
+         \scriptsize rubric mean};
+  \draw[flow] (judge.west) -- (board.east);
+
+  % gold answers feed the judge, and visibly trace back to the SAME graph
+  \draw[flow] (gold.east) to[out=0,in=205]
+        node[pos=0.5, below=0.3mm, font=\scriptsize, text=black!60] {gold}
+        (judge.west);
+  % the dashed "scored against" link: gold (graph-projected) <-> judged answer
+  \draw[scored] (graph.south) to[out=-90,in=180]
+        node[pos=0.7, below=0.5mm, accent, font=\scriptsize\itshape]
+        {scored against graph truth} (board.west);
+
+\end{tikzpicture}

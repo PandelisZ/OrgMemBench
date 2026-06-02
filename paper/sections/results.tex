@@ -1,0 +1,193 @@
+%==============================================================================
+% Experiments, Results, and Analysis
+%
+% Drop-in body for Section 5 (Experiments). The enclosing \section{Experiments}
+% and \label{sec:experiments} live in main.tex; this file supplies the
+% condensed body subsections. All numbers are the verified means/per-category
+% scores read off results/<system>/helix-{small,medium}.json and cross-checked
+% against the ground-truth anchors. Public field = four systems (gbrain,
+% zep-cloud, mem0-platform, graphify-oss); the only medium-tier run completed to
+% date is gbrain. Per-system autopsies, the gbrain mechanism subsection, the full
+% readiness case write-ups, per-run dollar figures, and judge token detail are in
+% Appendix~\ref{app:extended} (Extended Results).
+%==============================================================================
+
+\subsection{Metrics and Setup}
+\label{sec:exp:metrics}
+
+\bench{} scores each answer with a \emph{rubric-weighted} judgment in $[0,1]$
+rather than exact match. Every question ships with a weighted rubric (Stage~E,
+\S\ref{sec:design:questions}): a small set of sub-criteria---typically the
+specific fact, the date or time qualifier, the supersession or contradiction
+relation, and the justification chain---each with an explicit weight. An answer
+earns the weighted fraction of sub-criteria it satisfies, so partial credit
+reflects \emph{which} part of an organizationally grounded answer a system got
+right. The headline metric is the mean of this rubric score over the questions
+in a tier. We report exact match only as a secondary diagnostic: it is
+effectively zero across the board, because correct answers are multi-clause
+statements no system reproduces verbatim, which is exactly why a sub-point rubric
+is the appropriate instrument. An LLM judge with extended thinking scores each
+answer against the per-sub-criterion rubric, awarding each sub-point
+independently before summing, under the same configuration for every system
+(token budgets, temperature, and output caps in Appendix~\ref{app:extended}).
+
+The judge also labels each non-perfect answer with one of five mutually exclusive
+failure modes---\texttt{retrieval\_miss}, \texttt{hallucination},
+\texttt{wrong\_synthesis}, \texttt{wrong\_abstain}, and \texttt{none}---which lets
+us separate \emph{retrieval} failures from \emph{reasoning} failures, a
+distinction the scaling analysis below turns on.
+
+\paragraph{Setup and answerer policy.}\label{sec:exp:setup}
+Each system is evaluated in isolation: the tier corpus is ingested into a
+\emph{fresh} store (scope isolated per tier), the system is driven through a
+readiness gate (\S\ref{sec:exp:readiness}), and the tier's questions are then
+issued and scored; hosted systems run over their public APIs and self-hosted
+systems in pinned Docker images (pins in \S\ref{sec:baselines}/Appendix~\ref{app:hyperparams}).
+Retrieval and answer synthesis are decoupled: a system that ships its own
+synthesizer is run end-to-end with it (\texttt{gbrain} via native \texttt{think}),
+the artifact a user would deploy, while retrieval-only systems
+(\texttt{zep-cloud}, \texttt{mem0-platform}, \texttt{graphify-oss}) share one
+fixed neutral answerer (Claude Sonnet~4.6) so differences reflect the memory
+layer; top-$K=10$ wherever configurable.
+
+\paragraph{Cost.}
+End-to-end cost is $\approx$\$0.02--\$0.04 per question, dominated by the judge
+and answerer; \texttt{graphify-oss}'s server-side Sonnet extraction dominates its
+all-in cost ($\approx$\$0.13 per question at medium), with the full breakdown and
+the \texttt{cost\_per\_query\_usd} metering caveat in
+Appendix~\ref{app:extended}.
+
+\paragraph{Statistical caveat (stated up front).}
+These are \textbf{single-seed} results over \textbf{small} question sets (11
+small, 73 medium), so we attach no confidence intervals and treat sub-$0.1$
+between-system gaps as indicative rather than significant. The full treatment of
+this variance---including the replication numbers---is in \S\ref{sec:limitations},
+the body home for those figures.
+
+\subsection{Main Results}
+\label{sec:exp:main}
+
+Table~\ref{tab:main-results} reports the headline rubric means. The central
+finding is not that one system wins: it is that \textbf{organizational-scale
+memory is unsolved}. The strongest currently-available public system,
+\texttt{gbrain}, reaches only $0.394$ on the small tier and $0.428$ on the
+medium tier; across both tiers the rest of the public field clusters between
+$0.142$ and $0.303$. There is large headroom on every tier and in every
+category, and the spread between the best public system and the rest, while
+clear, is itself modest relative to the gap to a competent answer. We
+deliberately frame \texttt{gbrain} as the strongest \emph{currently-available
+public} system rather than as a solution: a $0.39$ ceiling on a benchmark whose
+questions a human analyst with access to the corpus could largely answer is the
+paper's motivating result, not a leaderboard victory. ``Leads'' is not
+``solves'': \texttt{gbrain} scores $0.000$ on small-tier contradiction (C6) and
+$0.122$ on bi-temporal (C3), and its $0.394$/$0.428$ means leave roughly
+six-tenths of the achievable rubric credit on the table. The headline of the
+benchmark is this remaining headroom, not the identity of the front-runner.
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{End-to-end results on \bench{}: mean rubric score and
+    per-category breakdown (higher is better).} A single consolidated view of
+    both tiers. Top panel: the four public memory systems on the small tier
+    (11 questions, 121 artifacts). Bottom panel: the same four on the medium tier
+    (73 questions, 443 artifacts). Category columns abbreviate the
+    six \bench{} categories (full definitions in Table~\ref{tab:categories}):
+    Supers.~=~supersession (C1), Prov.~=~decision provenance (C2),
+    Bi-temp.~=~bi-temporal as-of (C3), Audit~=~audit replay (C4),
+    Justif.~=~justification chain (C5), Contra.~=~contradiction (C6). Best
+    value per column within each tier in bold. Single seed; see \S\ref{sec:exp:setup}
+    for the variance caveat. A controlled-extractor probe (\texttt{mem0} OSS +
+    Sonnet, not a shipped product; Appendix~\ref{app:extended}) scores a $0.479$
+    small-tier mean.}
+  \label{tab:main-results}
+  \begin{tabular}{l S[table-format=1.3]
+      S[table-format=1.3] S[table-format=1.3] S[table-format=1.3]
+      S[table-format=1.3] S[table-format=1.3] S[table-format=1.3]}
+    \toprule
+    {System} & {Mean} & {Supers.} & {Prov.} & {Bi-temp.} & {Audit} & {Justif.} & {Contra.} \\
+    \midrule
+    \multicolumn{8}{l}{\emph{Small tier} --- 11 questions, 121 artifacts ($\approx$60K tokens)} \\
+    \texttt{gbrain}        & \bfseries 0.394 & \bfseries 0.675 & \bfseries 0.762 & 0.122 & \bfseries 0.533 & \bfseries 0.411 & 0.000 \\
+    \texttt{zep-cloud}     & 0.252 & 0.525 & 0.625 & 0.172 & 0.000 & 0.117 & \bfseries 0.133 \\
+    \texttt{mem0-platform} & 0.221 & 0.000 & 0.400 & \bfseries 0.317 & 0.000 & 0.183 & \bfseries 0.133 \\
+    \texttt{graphify-oss}  & 0.206 & 0.362 & 0.250 & 0.028 & 0.067 & 0.406 & 0.033 \\
+    \midrule
+    \multicolumn{8}{l}{\emph{Medium tier} --- 73 questions, 443 artifacts ($\approx$200K tokens)} \\
+    \texttt{gbrain}        & \bfseries 0.428 & \bfseries 0.540 & \bfseries 0.612 & \bfseries 0.307 & \bfseries 0.489 & \bfseries 0.216 & 0.214 \\
+    \texttt{mem0-platform} & 0.303 & 0.403 & 0.492 & 0.000 & 0.348 & 0.059 & \bfseries 0.431 \\
+    \texttt{zep-cloud}     & 0.213 & 0.252 & 0.271 & 0.026 & 0.402 & 0.020 & 0.194 \\
+    \texttt{graphify-oss}  & 0.142 & 0.068 & 0.185 & 0.067 & 0.264 & 0.141 & 0.000 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Reading the table.}
+Two orderings emerge: small tier \texttt{gbrain}~$\gg$ \texttt{zep-cloud}~$>$
+\texttt{mem0-platform}~$>$ \texttt{graphify-oss}; medium tier \texttt{gbrain}~$\gg$
+\texttt{mem0-platform}~$>$ \texttt{zep-cloud}~$>$ \texttt{graphify-oss}. The gap
+between \texttt{gbrain} and the rest is the only clearly significant separation at
+both scales; the lower-ranked systems are closer together, so we treat fine
+separations among them cautiously, and exact match is near zero everywhere,
+confirming the rubric mean is the informative signal. Notably the order among the
+trailing three is \emph{not} preserved across tiers---\texttt{mem0-platform} and
+\texttt{zep-cloud} swap---which we return to in \S\ref{sec:exp:scaling}. A
+controlled \texttt{mem0} OSS probe (extractor swapped to Sonnet~4.6) localizes
+that system's bottleneck to its undisclosed extractor, with full framing in
+Appendix~\ref{app:extended}.
+
+\subsection{Analysis by Category}
+\label{sec:exp:bytype}
+
+The per-category panels of Table~\ref{tab:main-results} expose where the
+difficulty concentrates, and the hardest categories are exactly the ones
+\bench{} was built to probe. \textbf{Contradiction (C6) and bi-temporal (C3) are
+cliffs already on the small tier}, near zero or below $0.32$ across the field.
+\textbf{Justification chains (C5) hold up better at small scale but collapse as
+the corpus grows.} The categories the benchmark targets stay near the floor as
+the corpus grows---at medium scale no system clears $0.31$ on C3 or $0.22$ on
+C5---so fine-grained entity, event, and as-of reasoning is precisely the behavior
+no public system delivers, and it does not improve with more data. The
+per-category profile also explains where each non-\texttt{gbrain} system lands and
+why \texttt{gbrain} leads; the per-system failure-mode autopsies and the
+\texttt{gbrain} retrieval/synthesis mechanism are in Appendix~\ref{app:extended}.
+
+\subsection{Scaling from Small to Medium}
+\label{sec:exp:scaling}
+
+The medium tier triples the corpus ($443$ artifacts) and roughly quintuples the
+question count ($73$). Running all four systems on both tiers shows that
+\textbf{degradation with scale is system-specific, not uniform}, and the
+small-tier ordering does \emph{not} simply persist: \texttt{gbrain} is
+scale-robust ($0.394 \rightarrow 0.428$), \texttt{mem0-platform} improves
+($0.221 \rightarrow 0.303$), \texttt{zep-cloud} degrades ($0.252 \rightarrow
+0.213$), and \texttt{graphify-oss} degrades most in relative terms ($0.206
+\rightarrow 0.142$). The net effect is that \texttt{mem0-platform} and
+\texttt{zep-cloud} \emph{swap} ranks between tiers while \texttt{gbrain} extends
+its lead. This is a stronger result than ``the ranking holds'': an architecture's
+behavior at conversational small scale does not predict its behavior at
+organizational scale, which is precisely the regime \bench{} is built to expose.
+The per-system causal one-liners, edge counts, and \texttt{gbrain}'s medium-tier
+failure-mode shift are in Appendix~\ref{app:extended}.
+
+\subsection{Readiness Gating: A Methodological Result}
+\label{sec:exp:readiness}
+
+A fair comparison of \emph{hosted, asynchronous} memory systems requires a
+\textbf{readiness gate} before querying, and getting this wrong materially
+distorts the leaderboard. Synchronous systems have finished ingesting when the
+ingest call returns; the two hosted async systems do not---extraction continues
+server-side, so an ``ingest returned'' signal or a naive count-plateau drain can
+declare readiness over an empty or half-built store. We treat the design of a
+correct drain as a contribution in its own right: hosted-memory benchmarking must
+(i)~gate on a \emph{probe search} that returns non-zero, stable results, not on an
+ingest-returned signal or a count plateau, and (ii)~report per-category, not only
+aggregate, scores---because graph completeness can move recall and reasoning in
+opposite directions under a flat mean. Both points have leaderboard-changing
+force: under the corrected gate \texttt{mem0-platform} rises $0.141 \rightarrow
+0.221$, while a proper \texttt{zep-cloud} settle barely moves the tier mean yet
+swings per-category scores massively. These fixes were necessary to produce the
+numbers in Table~\ref{tab:main-results} and are, in our view, prerequisites for
+\emph{any} fair evaluation of asynchronous hosted memory, not artifacts of this
+benchmark. The two full case write-ups (the \texttt{mem0} drain mechanism and the
+\texttt{zep} half-built-graph deltas with their \texttt{Retry-After}/404-race
+plumbing) are in Appendix~\ref{app:extended}.

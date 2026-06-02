@@ -1,0 +1,46 @@
+# graphify-oss docker-compose
+#
+# Sidecars: NONE. graphify-oss uses:
+#   - Claude API (Anthropic) for semantic extraction at ingest time
+#   - Pure graph traversal (BFS/DFS) for queries — no vector DB, no SQL DB
+#
+# The container is kept alive with `sleep infinity` so the adapter can call
+# `docker exec orgmembench-graphify-oss graphify extract <path>` and
+# `docker exec orgmembench-graphify-oss graphify query "<q>" --graph <path>`
+# without container startup overhead per call.
+#
+# Port bindings: none (no HTTP API).
+# Port conflicts: cannot collide with qdrant :6333, neo4j :7687, gbrain-pg
+#   :5432, or graphify-service :9000 because this container exposes nothing.
+#
+# Volume: /data is bind-mounted by the adapter to a per-run host tmpdir.
+# The host path is managed by GraphifyOssAdapter._workdir and passed via
+# GRAPHIFY_OSS_WORKDIR env var (set at `docker run` / `docker compose up` time
+# by the adapter before any CLI calls).
+#
+# Usage:
+#   docker compose -f docker/graphify-oss/docker-compose.yml build
+#   docker compose -f docker/graphify-oss/docker-compose.yml up -d
+
+services:
+  graphify-oss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orgmembench-graphify-oss:latest
+    container_name: orgmembench-graphify-oss
+    # Keep alive; adapter calls docker exec
+    command: sleep infinity
+    # No ports exposed (CLI-only, no HTTP API)
+    environment:
+      # API key injected by the adapter at exec time via docker exec -e; we
+      # leave the env var unset here so it MUST be supplied at runtime and
+      # never leaks into the image or compose file.
+      - ANTHROPIC_API_KEY
+    volumes:
+      # Per-run corpus scratch: the adapter sets GRAPHIFY_OSS_WORKDIR on the
+      # host to a tmpdir and mounts it here.
+      - type: bind
+        source: ${GRAPHIFY_OSS_WORKDIR:-/tmp/graphify-oss-data}
+        target: /data
+    restart: "no"

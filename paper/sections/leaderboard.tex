@@ -1,0 +1,43 @@
+%==============================================================================
+% LEADERBOARD (compact, intro-adjacent) --- headline result up front.
+%
+% Owned by the introduction restructure pass. The orchestrator wires the
+% \input order in main.tex (this file is \input'd just after the intro prose,
+% before/with the teaser). Numbers are the top-level tier means from
+% tab:main-results (results.tex, sec:exp:main): the Mean column only. The full
+% per-category breakdown stays in Table~\ref{tab:main-results} (Experiments).
+%
+% Cross-refs OUT: \ref{tab:categories} (C-taxonomy), \ref{sec:experiments}
+% (full table + analysis). Cross-refs IN: \ref{tab:leaderboard} from
+% introduction.tex (headline para + contributions) and abstract/results.
+%==============================================================================
+\begin{table}[t]
+  \centering
+  \caption{\textbf{\bench{} leaderboard: top-level rubric score by tier
+    (higher is better, $[0,1]$).} Mean rubric-weighted score over all questions
+    in a tier, for the four publicly available memory systems, ordered by
+    medium-tier mean. No system is close to solving the task: the strongest
+    public system, \texttt{gbrain}, reaches only $0.394$ (small) and $0.428$
+    (medium), and the small-tier ordering does not survive the move to the
+    medium tier (\texttt{mem0-platform} and \texttt{zep-cloud} swap rank). The
+    full per-category breakdown over the six \bench{} competencies (C1--C6;
+    Table~\ref{tab:categories}) is in Table~\ref{tab:main-results}
+    (\S\ref{sec:experiments}). Single seed; see \S\ref{sec:exp:setup} for the
+    variance caveat.}
+  \label{tab:leaderboard}
+  \small
+  \begin{tabular}{l S[table-format=1.3] S[table-format=1.3]}
+    \toprule
+    {System} & {Small mean} & {Medium mean} \\
+    \midrule
+    \texttt{gbrain}        & \bfseries 0.394 & \bfseries 0.428 \\
+    \texttt{mem0-platform} & 0.221 & 0.303 \\
+    \texttt{zep-cloud}     & 0.252 & 0.213 \\
+    \texttt{graphify-oss}  & 0.206 & 0.142 \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  {\footnotesize Small tier: 11 questions, 121 artifacts ($\approx$60K tokens).
+  Medium tier: 73 questions, 443 artifacts ($\approx$200K tokens). Bold marks
+  the best value per column.}
+\end{table}

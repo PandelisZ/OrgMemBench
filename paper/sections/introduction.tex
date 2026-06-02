@@ -1,0 +1,137 @@
+%==============================================================================
+% 1. INTRODUCTION
+%==============================================================================
+% Drafted from paper/.research/{motivation,landscape,results}.md.
+% Cite keys are the ones defined in refs.bib:
+%   maharana2024locomo, wu2024longmemeval, beam2025, mem0_2024, zep_graphiti_2025
+% (the brief names locomo/longmemeval/beam/mem0/zep map onto these).
+%------------------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+When a company decides to raise enterprise pricing, the useful artifact is not the
+new number. It is the record that the number was raised from a prior value, because
+of churn observed in a specific customer cohort, reviewed on a specific date by a
+specific person, with a pending re-evaluation triggered by a named competitor's
+move. An AI agent asked ``when did we change enterprise pricing, and why?'' must
+recover not the current state but the transition. This is \emph{organizational
+memory}: the accumulated record of what a company
+decided, why, when, and who was involved, scattered across every surface where work
+happens, including Slack threads, meeting transcripts, tickets, emails, shared
+documents, and contracts. It is the substrate that lets independent agents converge
+on one consistent account of what is true, what was true, and why it changed.
+Without it, each agent carries its own partial context and acts on facts the rest of
+the organization has already superseded; the company gets \emph{less} coherent the
+more agents are added to it. As agents move from individual productivity tools to
+operational participants doing contract review, customer escalation, engineering
+planning, and financial modeling, the binding failure mode is no longer ``the agent
+does not know.'' It is ``the agent confidently acts on a fact that is no longer
+true.''
+
+Organizational memory is structurally unlike the personal, conversational memory
+that current benchmarks measure, in three ways that jointly make it hard. It is
+\emph{graph-shaped}: the relationships between facts carry as much weight as the
+facts themselves, because a decision is only actionable alongside the conversation
+that prompted it, the estimate that bounded it, and the sign-off that ratified it.
+It is \emph{bi-temporal}: companies revise decisions, and a usable memory must date
+and recover both the change and the prior state independently, separating what was
+true \emph{then} (valid time) from when the system learned it (ingestion time), so
+that supersession is preserved rather than overwritten. And it is
+\emph{decision-traced}: the reasoning behind a fact is frequently more valuable than
+the fact, because decision traces are how organizations avoid re-litigating settled
+questions. A corpus with these properties stops looking like a chat log and starts
+looking like a company: dozens of simultaneous authors writing across incompatible
+channels, recording contradictions across teams that the system must surface rather
+than silently resolve.
+
+The dominant memory benchmarks do not exercise any of this. LoCoMo
+\citep{maharana2024locomo} evaluates very-long-term \emph{two-person} dialogue and is
+now near-saturated; LongMemEval \citep{wu2024longmemeval} tests knowledge updates and
+temporal reasoning but only over a \emph{single user's own stated facts}; and BEAM
+\citep{beam2025} pushes the volume frontier to coherent \emph{single-narrator}
+conversation that, though unsaturated, still asks \emph{how much} one person said, not
+\emph{who} said what across an organization (per-benchmark scale and SOTA figures, and
+the disputed-LoCoMo argument, in \S\ref{sec:related:benchmarks}). All three share one
+structural assumption: memory is a single narrator's history, possibly very long. None
+varies author count, channel heterogeneity, role and scope structure, or attributed
+supersession, which are precisely the axes that define organizational memory. The
+near-saturation of LoCoMo and LongMemEval is therefore not evidence that memory is
+solved; it is evidence that these benchmarks stopped measuring the hard part.
+
+\bench{} targets exactly the regime these benchmarks omit. It is a benchmark of
+long-horizon organizational memory built over a multi-channel synthetic corpus that
+behaves like a real company's record: an eighty-five-person organization writing
+across email, Slack, meeting transcripts, tickets, wikis, and CRM, over a multi-year
+history in which facts are routinely superseded, corrected, and left in unresolved
+contradiction. Its questions are not retrievals from a narrator's history but
+cross-channel, multi-hop inferences over years of accumulated artifact, organized
+into a taxonomy of organizational competencies. The small and medium tiers evaluated
+here exercise six of these competencies (C1--C6): supersession, decision provenance,
+bi-temporal (as-of-date) reasoning, audit replay, justification chains, and
+contradiction resolution. A seventh competency, emergent patterns assembled from
+behavior that was never written down as a rule, is evaluated only at the large tier
+and above, where a deep enough behavioural corpus exists for the patterns to be
+reconstructable; it is out of scope for the small and medium tiers in this paper.
+We evaluate four publicly available knowledge-graph and memory systems that we
+could obtain and run end-to-end against an external corpus: gbrain, Zep/Graphiti
+\citep{zep_graphiti_2025}, the hosted Mem0 platform \citep{mem0_2024}, and the
+open-source graphify. All four run under a single fixed harness with an identical
+answerer and judge, and the headline result is not that any system wins:
+Table~\ref{tab:leaderboard} shows that no system is close, the strongest public
+system, gbrain, reaching only $0.394$ small and $0.428$ medium. The small-tier
+ordering does not even survive the move to medium scale, so conversational-scale
+behavior does not predict organizational-scale behavior, and by this measurement
+organizational-scale memory is an \emph{unsolved} problem with large remaining
+headroom.
+
+\paragraph{Contributions.}
+\begin{itemize}
+  \item \textbf{The \bench{} benchmark.} A benchmark for long-horizon organizational
+        memory over a multi-channel, multi-author, multi-year synthetic corpus
+        (small and medium tiers of $121$ and $443$ artifacts, scaling toward larger
+        tiers), with questions spanning organizational competencies that no
+        prior conversational benchmark exposes. The small and medium tiers evaluated
+        here cover six competencies (C1--C6; Table~\ref{tab:categories}); a seventh,
+        emergent patterns, is evaluated only at the large tier and above and is out
+        of scope here.
+  \item \textbf{A reproducible, neutral evaluation harness} that runs the four
+        publicly available memory systems (gbrain, Zep/Graphiti, Mem0 platform, and
+        open-source graphify) under identical conditions: shared answerer, shared
+        LLM-as-judge with a fixed rubric, and a \emph{readiness-gating} methodology
+        that drains asynchronous hosted systems on a probe search rather than a naive
+        ingest signal, a fix that materially changes measured scores and that we
+        document as a contribution in its own right.
+  \item \textbf{The empirical finding that the field is unsolved.} No publicly
+        available system comes close to organizational competence: every system
+        collapses on justification chains, bi-temporal reasoning, and contradiction,
+        and the ranking among the trailing systems reorders between tiers, indicating
+        a ceiling far below usable performance and large headroom for future work
+        (full per-tier, per-category results in Section~\ref{sec:experiments}).
+  \item \textbf{Public release.} We release the corpus, the question set, the
+        evaluation harness, and a leaderboard, so that subsequent systems can be
+        scored under the same fixed conditions.
+\end{itemize}
+
+The remainder of the paper situates \bench{} against prior memory benchmarks and
+systems (Section~\ref{sec:related}), details the corpus and question-generation
+design (Section~\ref{sec:design}), describes the baseline systems and their
+configuration (Section~\ref{sec:baselines}), reports and analyzes results
+(Section~\ref{sec:experiments}), and closes with limitations
+(Section~\ref{sec:limitations}) and broader implications.
+
+% TEASER FIGURE --- Figure 1, in the intro (guide 2.7 / 5.2). Guarded with
+% \IfFileExists so the section compiles before the asset exists.
+\begin{figure}[t]
+  \centering
+  \resizebox{0.95\linewidth}{!}{\input{figures/teaser_diagram}}
+  \caption{\textbf{The \bench{} evaluation pipeline.} A multi-channel, multi-author
+    synthetic organizational corpus (email, Slack, meeting transcripts, tickets,
+    wikis, CRM) is ingested by each memory system. Competency-tagged questions
+    (the six small/medium-tier competencies: supersession, decision provenance,
+    bi-temporal, audit replay, justification chains, contradiction) are answered
+    through a shared answerer
+    and scored by a fixed LLM-as-judge rubric, with a readiness gate ensuring hosted
+    asynchronous systems are fully ingested before querying. The strongest public
+    system answers only $\sim$$39\%$ of the task.}
+  \label{fig:teaser}
+\end{figure}

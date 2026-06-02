@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Node (gbrain adapter etc.)
+node_modules/
+
+# Vendored upstream source — keep source code, exclude build & nested git
+vendor/*/node_modules/
+vendor/*/.git/
+vendor/*/.next/
+vendor/*/dist/
+vendor/*/build/
+vendor/*/__pycache__/
+vendor/*/*.egg-info/
+
+# Env / secrets — NEVER commit credentials (repo is treated as public)
+.env
+.env.*
+*.local
+secrets.*
+
+# OS
+.DS_Store
+
+# Generation / run scratch (regenerable; not part of the dataset authority)
+**/.checkpoints/
+/tmp/
+
+# Adapter index scratch + local model/judge caches
+*.duckdb
+*.sqlite
+.cache/
+
+# Run outputs: ignore per-run scratch; final committed results are added
+# explicitly when a publishable run is done.
+results/raw/
+results/**/runs/
+results/*/*.partial.jsonl
+results/*/*.json
+
+# NOTE: datasets/ IS committed — this repo is the authority for the dataset.
+results/leaderboard.md
+
+# graphify-oss test/run output
+graphify-out/

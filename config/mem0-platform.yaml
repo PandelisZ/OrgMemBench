@@ -1,0 +1,48 @@
+# OrgMemBench — Mem0 Platform adapter configuration
+#
+# Contestant label : mem0-platform
+# SDK package      : mem0ai==2.0.2  (same package as OSS; different class)
+# Install          : pip install "mem0ai==2.0.2"
+# Platform docs    : https://docs.mem0.ai/platform/quickstart
+# REST API ref     : https://docs.mem0.ai/api-reference/memory/search-memories
+#
+# ── Important: versioning caveat ─────────────────────────────────────────────
+# The SDK version (mem0ai==2.0.2) pins the *client*. The Mem0 Platform managed
+# service itself has NO client-pinnable version — it is a cloud service that
+# updates continuously. Benchmark results recorded with this config reflect:
+#   (a) mem0ai SDK version 2.0.2
+#   (b) the platform service state at the time of the run (not reproducible
+#       from the SDK version alone)
+# Always record the run date alongside the SDK version for reproducibility.
+#
+# ── How this config is used ──────────────────────────────────────────────────
+# The harness reads this file and passes it as `config=` to Mem0PlatformAdapter().
+# Keys map 1-to-1 to the fields read by the adapter at run time.
+# Fields not listed here get the adapter's own defaults.
+#
+# ── Required environment variables ───────────────────────────────────────────
+#   MEM0_API_KEY   — Mem0 Platform API key from https://app.mem0.ai
+#
+# No ANTHROPIC_API_KEY or OPENAI_API_KEY needed: LLM extraction and embeddings
+# are handled server-side by the Mem0 Platform.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Pinned SDK version (harness check_version() warns on drift) ───────────────
+# Note: this is the SDK (client-side) version, not the platform service version.
+# The resolved version string will appear as "2.0.2 (platform)" in results to
+# make clear that the service itself is unversioned.
+version: "2.0.2 (platform)"
+
+# ── Retrieval ─────────────────────────────────────────────────────────────────
+# top_k is passed directly to MemoryClient.search(). Platform default is 10.
+# Increase for harder tiers (MEDIUM/LARGE) to surface more evidence.
+retrieval_top_k: 10
+
+# ── Platform notes (informational; not read by the adapter) ──────────────────
+# The platform uses hybrid retrieval: semantic vector embedding + BM25 keyword
+# matching + entity matching. No configuration is needed or possible for these
+# internals — the platform manages all infrastructure (vector store, graph DB,
+# LLM extraction, embedder) server-side.
+#
+# Mem0 Platform free tier: 10,000 memories (adequate for small/medium tiers).
+# Production benchmarks: Starter ($19/mo) or Pro ($249/mo) recommended.

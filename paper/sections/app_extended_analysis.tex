@@ -1,0 +1,189 @@
+%==============================================================================
+% Extended Results (analysis)
+%
+% This file is \input AFTER the existing \section{Extended Results}
+% (\label{app:extended}) stub in main.tex. It CONTINUES that section: it opens NO
+% new \section and does NOT redefine \label{app:extended}. It gathers the
+% per-system failure autopsies, the gbrain "why it leads" mechanism
+% (\label{sec:exp:gbrain}, self-defined only; carried here for robustness), the
+% gbrain medium failure-mode shift, the two full readiness-gating case write-ups,
+% the per-run dollar figures, the scaling edge-count micro-detail, and the judge
+% token-budget/temperature/output-cap detail --- all relocated verbatim (lightly
+% reflowed) from the condensed body Section~5 (Experiments).
+%==============================================================================
+
+\subsection{Judge and cost detail}
+\label{app:extended:judge-cost}
+
+\paragraph{Judge configuration.}
+Scoring is performed by an LLM judge---Claude Sonnet~4.6 with extended thinking
+(a 4000-token reasoning budget, temperature~1.0, up to 8000 output tokens)---
+prompted with the question, the gold answer, the evidence artifact IDs, and the
+per-sub-criterion rubric, and instructed to award each sub-point independently
+before summing. Extended thinking is used deliberately: the judge must itself
+perform the multi-hop check the question demands (did the answer cite the
+\emph{current} decision rather than the superseded one; is the asserted date
+consistent with the bi-temporal record) before it can grade faithfully. The same
+judge configuration scores every system, so judge variance is shared across the
+comparison.
+
+\paragraph{Per-run cost figures.}
+Measured end-to-end cost (judge plus answerer) is roughly \$0.02--\$0.04 per
+question and is dominated by those two components for systems with no metered
+extraction. On an 11-question small-tier run the judge costs $\approx$\$0.18--\$0.24
+and the shared neutral answerer $\approx$\$0.14--\$0.25 (the answerer cost falls on
+\texttt{zep-cloud}, \texttt{mem0-platform}, and \texttt{graphify-oss}; \texttt{gbrain}
+uses its native \texttt{think} synthesizer and incurs \$0 of shared-answerer cost).
+Per-system extraction spend is only metered where it runs on tokens we pay for:
+\texttt{graphify-oss} incurs $\approx$\$0.79 of Sonnet extraction at the small tier
+and $\approx$\$6.44 at the medium tier---where extraction, not the judge, becomes
+the largest single cost component---while \texttt{gbrain} surfaces \$0 at ingest
+(capture runs through ZeroEntropy and a local pipeline) and the hosted
+\texttt{mem0-platform} and \texttt{zep-cloud} extraction costs are server-side and
+not exposed to the harness. Because the harness's \texttt{cost\_per\_query\_usd}
+field only captures answerer tokens it issues directly, a system whose synthesizer
+runs out-of-process (\texttt{gbrain}'s \texttt{think}) reports \$0 there even though
+it does real work; the meaningful cost axis is the system's own
+extract-plus-retrieval spend, not the answerer total.
+
+\subsection{Per-system failure autopsies}
+\label{app:extended:autopsies}
+
+The category profile explains \emph{why each non-\texttt{gbrain} system lands
+where it does}, and the failure-mode labels make the diagnosis concrete.
+
+\paragraph{\texttt{graphify-oss} ($0.206$): coarse extraction $\rightarrow$
+retrieval miss.}
+The dominant failure mode is \texttt{retrieval\_miss}. The root cause is
+extraction granularity: on organizational prose the extractor produces roughly
+\emph{one node per artifact} (135 nodes for the 443 medium artifacts; one node
+per artifact at small), versus the $\approx 5$ nodes per artifact it produces on
+short code samples. Because the graph node \emph{is} the whole document, the
+keyword-seeded breadth-first search reaches adjacent whole documents but never
+the individual facts \emph{within} a document, so the evidence a question needs
+is structurally unreachable. The system also carries no embeddings (retrieval is
+pure BFS/DFS over the graph) and no bi-temporal model at all---\texttt{as\_of} is
+silently ignored---so C3~($0.028$) and C6~($0.033$) are near zero by
+construction. Its only relative strengths, supersession ($0.362$) and
+justification chain ($0.406$), come from coarse document-community proximity
+rather than from any temporal or relational reasoning.
+
+\paragraph{\texttt{mem0-platform} ($0.221$): a weak undisclosed extractor.}
+Here too \texttt{retrieval\_miss} dominates, and the shipped product
+extracts with an undisclosed server-side model that we cannot configure. The
+$+0.258$ gap to the Sonnet-extractor probe (\S\ref{sec:exp:main}) is the key
+evidence that the \emph{extractor}, not the wire protocol or retrieval logic, is
+the bottleneck: holding everything else fixed and substituting Sonnet~4.6 more
+than doubles the score. The hosted system is competent only on simple decision
+provenance (C2~$0.400$) and, interestingly, posts the field's best small-tier C3
+($0.317$)---though on 11 questions this is a thin signal. Its $0.000$ on
+supersession (C1) and audit replay (C4) shows it does not track facts changing
+over time.
+
+\paragraph{\texttt{zep-cloud} ($0.252$): graph completeness helps recall, hurts
+multi-hop.}
+\texttt{zep-cloud} is the one non-\texttt{gbrain} system that builds a genuine
+temporal graph and therefore \emph{engages} the temporal categories rather than
+abstaining. It is the strongest of the bottom three on simple recall
+(supersession $0.525$, decision provenance $0.625$) but the weakest where the
+benchmark's point lives: it scores $0.000$ on audit replay (C4) and only $0.117$
+on justification chains (C5). The readiness experiment
+(\S\ref{sec:exp:readiness}) exposes the mechanism directly: letting the graph
+finish building \emph{raised} simple-recall categories (supersession $+0.53$,
+decision provenance $+0.50$) while \emph{lowering} multi-hop ones (contradiction
+$-0.33$, justification chain $-0.27$, bi-temporal $-0.23$/$-0.17$). A fuller
+graph improves point lookups but dilutes the relevant subgraph at scoring time,
+hurting reasoning that must isolate a small set of related edges. A single tier
+mean hides this shape entirely---a methodological point we return to in
+\S\ref{sec:exp:readiness}.
+
+\subsection{Why \texttt{gbrain} Leads the Public Field}
+\label{sec:exp:gbrain}
+
+\texttt{gbrain} leads because of \emph{how it retrieves and synthesizes}, not
+because it solves the task. Its retrieval is hybrid---BM25 plus dense vector
+plus graph traversal---so it is far less prone to the single-modality blind spots
+that sink the others (\texttt{graphify-oss} has no vectors;
+\texttt{mem0-platform} has no graph structure exposed to the answerer). Its
+native \texttt{think} synthesizer then produces cited, multi-hop answers over the
+retrieved set, which is why it wins simple-recall provenance (C2~$0.762$) and
+supersession (C1~$0.675$) outright on the small tier. Its small-tier ceiling is
+set almost entirely by \emph{retrieval}: the failure modes are
+\texttt{retrieval\_miss} with only two hallucinations, meaning that when
+it fails on the small tier it is because the evidence never surfaced, not because
+it reasoned badly over what it had.
+
+But ``leads'' is not ``solves.'' \texttt{gbrain} scores $0.000$ on small-tier
+contradiction (C6) and $0.122$ on bi-temporal (C3): even the strongest public
+system cannot reliably detect that two artifacts conflict, or answer what was
+true as of a past date. The ``remaining headroom, not the front-runner'' framing
+of this gap is the paper's headline result, stated canonically in Main Results
+(\S\ref{sec:exp:main}); here we keep only the mechanism behind the ceiling.
+
+\paragraph{Medium-tier failure-mode shift.}
+% {\sloppy} absorbs the long unbreakable \texttt{} failure-mode identifiers
+% (retrieval_miss / hallucination / wrong_synthesis) so these lines do not run
+% over the edge; complements the orchestrator's global \emergencystretch.
+{\sloppy
+For \texttt{gbrain}, the per-category medium profile is recognizable---provenance
+and supersession on top, justification chains at the floor---but with two scale
+effects. First, C5 \emph{degrades} ($0.411 \rightarrow 0.216$): longer
+justification chains over a larger corpus are markedly harder. Second, the
+\emph{failure mode shifts}: at small scale \texttt{gbrain}'s dominant failure is
+\texttt{retrieval\_miss}, but at medium scale it becomes \texttt{hallucination}
+(ahead of \texttt{retrieval\_miss}), with \texttt{wrong\_synthesis} a distant
+third---at organizational scale the system more often surfaces \emph{some} context
+and then confidently synthesizes an unsupported answer, rather than surfacing
+nothing.\par}
+
+\subsection{Scaling edge-count detail}
+\label{app:extended:scaling}
+
+The per-system degradation profiles behind the small-to-medium scaling result
+(\S\ref{sec:exp:scaling}) are as follows. \texttt{gbrain} is \emph{scale-robust}:
+$0.394 \rightarrow 0.428$ (it even edges up), its hybrid retrieval keeping pace
+with the larger corpus. \texttt{mem0-platform} \emph{improves} with scale:
+$0.221 \rightarrow 0.303$; the larger corpus yields more extracted memories,
+lifting its provenance and contradiction categories (C2~$0.49$, C6~$0.43$).
+\texttt{zep-cloud} \emph{degrades}: $0.252 \rightarrow 0.213$; its temporal graph
+stays sparse relative to the corpus (it settled at $1000$ edges for $443$
+artifacts vs.\ $654$ for $121$), so recall thins out. \texttt{graphify-oss}
+\emph{degrades most in relative terms}: $0.206 \rightarrow 0.142$; its
+one-node-per-document extraction leaves the within-document facts unreachable,
+and the gap widens as documents multiply.
+
+\subsection{Readiness-gating case write-ups}
+\label{app:extended:readiness}
+
+The methodological readiness-gating result (\S\ref{sec:exp:readiness}) rests on
+two cases where the drain design changed the result.
+
+\paragraph{\texttt{mem0-platform}: $0.141 \rightarrow 0.221$ (the naive drain
+understated the system).}
+A naive drain that polled \texttt{get\_all} counts returned on a $0\rightarrow
+0\rightarrow 0$ plateau---asynchronous extraction had not yet \emph{started}, so
+the store looked stably empty---and the benchmark then queried an effectively
+empty memory. Replacing it with a probe-\emph{search} drain (requiring four
+consecutive \emph{non-zero} stable counts above a 60-second floor) revealed that
+extraction actually takes $\approx$420\,s to settle at $\approx$81 memories.
+Under the corrected gate the score rose from $0.141$ to $0.221$. Notably the
+broken run's slightly higher score on one question came from the answerer
+hallucinating a correct-looking answer from the question text with zero
+retrieved characters---an artifact of querying an empty store, not real
+performance. The lesson is counter-intuitive and important for fair evaluation:
+\emph{the naive drain understated the hosted system}.
+
+\paragraph{\texttt{zep-cloud}: a half-built graph times out (the mean moves only
+modestly; the shape changes a lot).}
+A 600\,s drain ceiling timed out on a half-built graph ($\approx$300 edges); a
+proper 1800\,s settle reached $654{+}$ edges. The tier mean moved only modestly
+($0.220 \rightarrow 0.252$), but the per-question scores moved \emph{massively}:
+supersession $+0.53$ and decision provenance $+0.50$, against contradiction
+$-0.33$, justification chain $-0.27$, and bi-temporal $-0.23$/$-0.17$. A more
+complete graph helped simple recall and \emph{hurt} multi-hop reasoning (the
+larger graph dilutes the relevant subgraph at scoring time)---so a single mean
+hides a real change in system behavior, and reporting only the mean would have
+masked a genuine completeness-vs-reasoning tradeoff. Reaching the settled state
+also required honoring the API's \texttt{Retry-After} (the free plan rate-limits
+aggressively) and polling \texttt{graph.get} for propagation to defeat a
+delete$\rightarrow$create$\rightarrow$add 404 race during store reset.

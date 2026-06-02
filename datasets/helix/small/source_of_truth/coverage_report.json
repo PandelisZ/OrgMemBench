@@ -1,0 +1,18 @@
+{
+  "size": "small",
+  "total_events": 17,
+  "per_category": {
+    "C2": 3,
+    "C5": 3,
+    "C1": 3,
+    "C6": 2,
+    "C3": 3,
+    "C4": 2
+  },
+  "per_year": {
+    "2021": 6,
+    "2022": 11
+  },
+  "total_relations": 7,
+  "per_category_target": 5
+}

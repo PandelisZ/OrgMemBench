@@ -1,0 +1,11 @@
+{"source": "EV-2022-013", "relation": "supersedes", "target": "EV-2022-012"}
+{"source": "EV-2022-007", "relation": "contradicts", "target": "EV-2021-001"}
+{"source": "EV-2022-008", "relation": "contradicts", "target": "EV-2021-003"}
+{"source": "EV-2022-017", "relation": "re_attempts", "target": "EV-2021-002"}
+{"source": "EV-2021-001", "relation": "retroactively_corrected_by", "target": "EV-2022-007"}
+{"source": "EV-2021-003", "relation": "retroactively_corrected_by", "target": "EV-2022-008"}
+{"source": "EV-2021-006", "relation": "retroactively_corrected_by", "target": "EV-2022-009"}
+{"source": "EV-2021-902", "relation": "supersedes", "target": "EV-2020-901"}
+{"source": "EV-2021-903", "relation": "contradicts", "target": "EV-2021-904"}
+{"source": "EV-2021-903", "relation": "resolved_by", "target": "EV-2021-902"}
+{"source": "EV-2023-906", "relation": "supersedes", "target": "EV-2021-905"}

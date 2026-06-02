@@ -1,0 +1,97 @@
+# gbrain adapter configuration for OrgMemBench
+#
+# ============================================================
+# PINNED VERSION — DO NOT UPDATE WITHOUT READING THE NOTE BELOW
+# ============================================================
+# gbrain is updated extremely frequently (40+ releases in a single year).
+# Results are only comparable when run against the EXACT same version.
+# The version + commit below were current on 2026-05-25.
+#
+# To install the pinned version:
+#   bun install -g github:garrytan/gbrain#3a2605e9a0b746a82ab42dd0177fc0f3a666a600
+#
+# To verify after install:
+#   gbrain --version        # must print "gbrain 0.41.6.0"
+#   gbrain version --json   # must show commit 3a2605e9a0b746a82ab42dd0177fc0f3a666a600
+#
+# If you update gbrain, update BOTH fields below, re-run the full benchmark,
+# and record a new results entry — do NOT mix result files from different versions.
+
+version: "gbrain 0.41.6.0"
+commit: "3a2605e9a0b746a82ab42dd0177fc0f3a666a600"
+
+# Docker container running the pinned gbrain binary. When set, all gbrain CLI
+# calls (capture / extract / dream / think) go through `docker exec`. Required
+# for clean PGLite-lock state across runs — native gbrain leaks lock state
+# between invocations and hangs.
+docker_container: "orgmembench-gbrain"
+
+# Install command (pinned to the exact commit above).
+# Run this once before the benchmark; never `bun upgrade` mid-run.
+install_cmd: "bun install -g github:garrytan/gbrain#3a2605e9a0b746a82ab42dd0177fc0f3a666a600"
+
+# ============================================================
+# Storage backend
+# ============================================================
+# "pglite" (default) runs Postgres 17 via WASM locally — no Docker, no server.
+# Supports up to ~50K pages; sufficient for OrgMemBench's small/medium/large tiers.
+# Switch to "postgres" for Supabase or self-hosted Postgres if you need scale.
+db_backend: "pglite"
+
+# Run once to initialise the local PGLite database before ingesting:
+#   gbrain init --pglite
+# For Postgres:
+#   gbrain init --postgres --connection-string "postgres://..."
+
+# ============================================================
+# Binary path
+# ============================================================
+# Leave empty to use whatever is on PATH (recommended with bun global install).
+# Set to a full path if you need to pin to a specific binary, e.g.:
+#   binary: "/home/user/.bun/bin/gbrain"
+binary: ""
+
+# ============================================================
+# LLM configuration
+# ============================================================
+# gbrain think --model accepts alias or full model ID.
+# We steer to Claude Sonnet 4.6 (the project-standard judge model) so synthesis
+# uses the same model family as the harness judge.
+#
+# Requires: ANTHROPIC_API_KEY in env.
+#
+# NOTE: gbrain does NOT expose a way to disable LLM calls in think mode; there
+# is no --no-llm flag. If you want a retrieval-only run (no synthesis), use
+# `gbrain recall` instead — but that returns raw facts, not a synthesised answer,
+# and is NOT what this adapter uses for query results.
+llm_model: "anthropic:claude-sonnet-4-6"
+
+# ============================================================
+# Embedding + reranker
+# ============================================================
+# gbrain defaults to ZeroEntropy embeddings + zerank-2 reranker.
+# Alternatively use OpenAI text-embedding-3-large:
+#   export OPENAI_API_KEY=sk-...
+#   gbrain init --pglite --embedding-model openai:text-embedding-3-large
+#
+# Requires at least one of:
+#   ZEROENTROPY_API_KEY  (default, recommended)
+#   OPENAI_API_KEY       (alternative embedder)
+embedding_model: "default"   # use gbrain's default (ZeroEntropy)
+
+# ============================================================
+# Retrieval parameters
+# ============================================================
+retrieval_top_k: 10
+
+# ============================================================
+# Required environment variables summary
+# ============================================================
+# ANTHROPIC_API_KEY     — for gbrain think LLM synthesis (claude-sonnet-4-6)
+# ZEROENTROPY_API_KEY   — for ZeroEntropy embeddings + zerank-2 reranker (default)
+# OR
+# OPENAI_API_KEY        — alternative embedding provider
+#
+# Optional:
+# GBRAIN_BIN            — full path to gbrain binary (if not on PATH)
+# GBRAIN_LLM_MODEL      — override llm_model above at runtime

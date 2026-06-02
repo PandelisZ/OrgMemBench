@@ -1,0 +1,147 @@
+{
+  "founding_year": 2020,
+  "founders": [
+    {
+      "name": "Maya Patel",
+      "blurb": ""
+    },
+    {
+      "name": "Daniel Kim",
+      "blurb": ""
+    }
+  ],
+  "year_arcs": {
+    "2020": "Founded and built a minimal viable product, hiring a core team of 5 engineers and securing first pilot with a regional carrier.",
+    "2021": "Launched Helix API, experienced a near-miss outage during a high-volume shipment surge, prompting a shift to a microservices architecture.",
+    "2022": "Secured Series\u202fA funding, expanded to 30 employees, and introduced Helix Dashboard, while a strategic pivot moved focus from B2C to mid-market freight forwarders.",
+    "2023": "Faced a critical customer escalation that led to a product redesign, followed by a 15\u202f% layoff to streamline operations and a leadership change with a new COO.",
+    "2024": "Released Helix AI Optimizer, achieved 20\u202f% cost savings for flagship clients, and onboarded 10 new enterprise customers.",
+    "2025": "Implemented a company-wide documentation overhaul, doubling internal wiki usage, and celebrated 85 employees with a global virtual summit.",
+    "2026": "Planned a Series\u202fB round, integrated AI-driven predictive analytics into the platform, and announced a strategic partnership with a major logistics consortium."
+  },
+  "eras": [
+    {
+      "n": 1,
+      "name": "Bootstrap Beginnings",
+      "start": "2020-01",
+      "end": "2020-12",
+      "discipline_level": "low",
+      "characterisation": "Documentation was informal, limited to README files and a handful of Slack threads; the team relied on verbal knowledge transfer and ad-hoc notes."
+    },
+    {
+      "n": 2,
+      "name": "Structured Foundations",
+      "start": "2021-01",
+      "end": "2021-12",
+      "discipline_level": "medium",
+      "characterisation": "The company introduced a shared Notion workspace, formalized API specs, and began maintaining a public-facing product roadmap; documentation grew from 5 pages to 30."
+    },
+    {
+      "n": 3,
+      "name": "Enterprise-grade Documentation",
+      "start": "2022-01",
+      "end": "2022-12",
+      "discipline_level": "high",
+      "characterisation": "A dedicated technical writer was hired, a style guide enforced, and all internal and external docs were migrated to Confluence; the team adopted versioned documentation with automated linting."
+    },
+    {
+      "n": 4,
+      "name": "Agile Documentation",
+      "start": "2023-01",
+      "end": "2023-12",
+      "discipline_level": "medium",
+      "characterisation": "Documentation became tightly coupled with sprint cycles, with daily stand-up notes captured in Confluence and a lightweight wiki for quick updates; the focus shifted to just-in-time docs."
+    },
+    {
+      "n": 5,
+      "name": "Knowledge-centric Culture",
+      "start": "2024-01",
+      "end": "2026-12",
+      "discipline_level": "high",
+      "characterisation": "The company built a knowledge graph linking product docs, support tickets, and code repositories; documentation was treated as a first-class product, with quarterly reviews and a dedicated docs-as-code pipeline."
+    }
+  ],
+  "products": [
+    "**Helix API** (2021): A RESTful interface that exposes real-time shipment data and routing analytics to partner systems.",
+    "**Helix Dashboard** (2022): A web portal that visualizes freight metrics, carrier performance, and cost breakdowns for mid-market forwarders.",
+    "**Helix AI Optimizer** (2024): An AI-driven recommendation engine that suggests optimal routing, carrier selection, and load consolidation to reduce costs."
+  ],
+  "customer_arc_count": 9,
+  "tooling": [
+    {
+      "year": 2020,
+      "quarter": 1,
+      "description": "HubSpot adopted for CRM (first tool in category)"
+    },
+    {
+      "year": 2020,
+      "quarter": 2,
+      "description": "Linear adopted for eng tickets (first tool in category)"
+    },
+    {
+      "year": 2020,
+      "quarter": 3,
+      "description": "Otter.ai adopted for meeting transcripts (first tool in category)"
+    },
+    {
+      "year": 2020,
+      "quarter": 4,
+      "description": "Figma adopted for design tool (first tool in category)"
+    },
+    {
+      "year": 2021,
+      "quarter": 1,
+      "description": "Notion adopted for internal wiki (first tool in category)"
+    },
+    {
+      "year": 2021,
+      "quarter": 2,
+      "description": "GitHub adopted for source control hosting (first tool in category)"
+    },
+    {
+      "year": 2021,
+      "quarter": 3,
+      "description": "Snowflake adopted for data warehouse (first tool in category)"
+    },
+    {
+      "year": 2022,
+      "quarter": 1,
+      "description": "Salesforce adopted for CRM (replaced HubSpot)"
+    },
+    {
+      "year": 2022,
+      "quarter": 2,
+      "description": "Jira adopted for eng tickets (replaced Linear)"
+    },
+    {
+      "year": 2022,
+      "quarter": 3,
+      "description": "Fireflies.ai adopted for meeting transcripts (replaced Otter.ai)"
+    },
+    {
+      "year": 2022,
+      "quarter": 4,
+      "description": "Adobe XD adopted for design tool (replaced Figma)"
+    },
+    {
+      "year": 2023,
+      "quarter": 1,
+      "description": "Confluence adopted for internal wiki (replaced Notion)"
+    },
+    {
+      "year": 2023,
+      "quarter": 2,
+      "description": "GitLab adopted for source control hosting (replaced GitHub)"
+    },
+    {
+      "year": 2023,
+      "quarter": 3,
+      "description": "BigQuery adopted for data warehouse (replaced Snowflake)"
+    },
+    {
+      "year": 2024,
+      "quarter": 1,
+      "description": "HubSpot adopted for CRM (replaced Salesforce)"
+    }
+  ]
+}

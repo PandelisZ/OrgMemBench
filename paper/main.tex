@@ -1,0 +1,319 @@
+%==============================================================================
+% OrgMemBench --- Datasets-and-Benchmarks paper
+%==============================================================================
+%
+% WORKING TITLE (placeholder, confirm before submission):
+%   "OrgMemBench: A Benchmark for Long-Horizon Organizational Memory in AI Agents"
+%
+% This is the ASSEMBLED paper. The body is composed of \input{sections/<name>}
+% fragments; the preamble, title/author block, and tooling are inherited from
+% the original scaffold (structure follows docs/publishing-a-paper-2026.md
+% section 5.3; tooling follows section 5.1).
+%
+%------------------------------------------------------------------------------
+% DOCUMENT CLASS --- PLACEHOLDER
+%------------------------------------------------------------------------------
+% This uses the always-available `article` class so the paper compiles with any
+% TeX install (tectonic / pdflatex / latexmk) and needs no venue style download.
+%
+% >>> SWAP to neurips_2026.sty / iclr2026.sty when targeting a venue <<<
+%     see docs/publishing-a-paper-2026.md section 1.1 for the template URLs.
+%     NeurIPS 2026 -> neurips_2026.sty (\usepackage{neurips_2026})
+%     ICLR  2026   -> iclr2026.sty     (\usepackage{iclr2026_conference})
+% When you swap, delete the geometry line below (venue .sty sets margins),
+% and move the title/author block into the venue macros.
+%------------------------------------------------------------------------------
+\documentclass[11pt]{article}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}      % include figures (with alt-text for arXiv HTML, see guide 1.1)
+\usepackage{booktabs}      % professional tables, no vertical rules (guide 1.6)
+\usepackage{siunitx}       % decimal-aligned numbers in tables (guide 1.6 / 5.1)
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[numbers,sort&compress]{natbib}   % BibTeX; matches NeurIPS/ICLR .bst (guide 1.4)
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{url}
+\usepackage{xspace}
+\usepackage{tikz}          % Figure 1 teaser diagram (figures/teaser_diagram.tex)
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds}
+
+% siunitx v3 table-column setup for the results tables.
+\sisetup{
+  detect-weight       = true,
+  detect-family       = true,
+  table-number-alignment = center,
+  round-mode          = places,
+  round-precision     = 2
+}
+
+% Global safety net for the occasional long unbreakable \texttt{} identifier that
+% would otherwise overrun the right margin; lets TeX relax spacing across the line.
+\setlength{\emergencystretch}{2em}
+
+\newcommand{\bench}{\textsc{OrgMemBench}\xspace}
+
+% The `article` class has no `keywords` environment, but sections/abstract.tex
+% emits one. Define a lightweight version so the paper compiles under `article`;
+% a venue .sty (NeurIPS/ICLR) typically supplies its own and this can be removed.
+\providecommand{\keywords}{}
+\renewenvironment{keywords}{%
+  \par\vspace{0.5\baselineskip}\noindent\small\textbf{Keywords:~}}{\par}
+
+\title{OrgMemBench: A Benchmark for Long-Horizon Organizational Memory in AI Agents}
+
+\author{%
+  Jack Gardner \\
+  Independent Researcher \\
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+%==============================================================================
+% ABSTRACT  (+ keywords) --- sections/abstract.tex supplies the abstract and
+% keywords environments in full.
+%==============================================================================
+\input{sections/abstract}
+
+%==============================================================================
+% 1. INTRODUCTION
+%==============================================================================
+\input{sections/introduction}
+
+% Compact leaderboard teaser (tab:leaderboard) --- a [t] float so the headline
+% result surfaces on the first page-turn. Full per-category table is in Experiments.
+\input{sections/leaderboard}
+
+%==============================================================================
+% 2. RELATED WORK
+%==============================================================================
+\input{sections/related_work}
+
+%==============================================================================
+% 3. ORGMEMBENCH DESIGN  (the core contribution)
+%    design.tex opens \section{\bench{} Design}; generation.tex continues it
+%    with the data-generation and manual-corrections subsections.
+%==============================================================================
+\input{sections/design}
+\input{sections/generation}
+
+%==============================================================================
+% 4. EXPERIMENTS  (baselines.tex is now the opening \subsection; results.tex
+%    supplies the remaining subsections)
+%==============================================================================
+\section{Experiments}
+\label{sec:experiments}
+\input{sections/baselines}
+\input{sections/results}
+
+%==============================================================================
+% 6. LIMITATIONS + FUTURE WORK
+%==============================================================================
+\input{sections/limitations}
+
+%==============================================================================
+% 7. CONCLUSION  (conclusion.tex also supplies the required closing
+%    \section* blocks: Ethics and Broader Impact, Reproducibility Statement,
+%    and Use of Large Language Models)
+%==============================================================================
+\input{sections/conclusion}
+
+%==============================================================================
+% ACKNOWLEDGEMENTS
+%==============================================================================
+\section*{Acknowledgements}
+We thank the maintainers of the open-source and hosted memory systems evaluated
+here for making their code and services publicly available, which made an
+independent, like-for-like comparison possible.
+
+%==============================================================================
+% REFERENCES
+%==============================================================================
+% natbib + BibTeX. arXiv processes the .bib into .bbl automatically (guide
+% 1.4 / 2.1). `plainnat` ships with natbib; swap to the venue .bst on adoption.
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+%==============================================================================
+% APPENDIX
+%   A. Datasheet for Datasets (sections/datasheet.tex --- defines app:datasheet)
+%   B. Croissant Metadata
+%   C. Baseline Hyperparameters and Configuration  (app:hyperparams)
+%   D. Annotation and Audit Process
+%   E. Extended Results  (app:extended --- holds the Mem0-OSS probe)
+%   F. Example Benchmark Instances
+%==============================================================================
+\appendix
+
+%------------------------------------------------------------------------------
+% A. Datasheet for Datasets (Gebru et al., 2021) --- \section{} + label live in
+%    the section file; it must NOT re-issue \appendix (handled above).
+%------------------------------------------------------------------------------
+\input{sections/datasheet}
+
+%------------------------------------------------------------------------------
+% B. Benchmark Construction Detail (relocated from Design/Generation body) ---
+%    \section{} + \label{app:construction} live in the file; carries the
+%    migrated \label{sec:design:rubric} and \label{sec:design:personas}.
+%------------------------------------------------------------------------------
+\input{sections/app_construction_detail}
+
+%------------------------------------------------------------------------------
+% C. Croissant Metadata
+%------------------------------------------------------------------------------
+\section{Croissant Metadata}
+\label{app:croissant}
+We accompany the release with Croissant metadata~\citep{croissant2024} so that
+\bench{} is machine-discoverable and ML-ready. The Croissant JSON-LD record
+describes each tier as a \texttt{RecordSet}, declares the corpus-artifact and
+question fields and their types, and links the source-of-truth graph and rubric
+files as referenced resources. The metadata file ships in the repository
+alongside the dataset (\texttt{datasets/helix/croissant.json}) and is regenerated
+whenever a tier is revised, so the published schema always matches the released
+artifacts.
+
+%------------------------------------------------------------------------------
+% C. Baseline Hyperparameters and Configuration
+%------------------------------------------------------------------------------
+\section{Baseline Hyperparameters and Configuration}
+\label{app:hyperparams}
+This appendix records the full per-system configuration so that every reported
+number is reconstructable; the summary pins are given in
+Table~\ref{tab:baseline-config} (Section~\ref{sec:baselines}).
+
+\paragraph{Shared judge and answerer.}
+The judge is Claude Sonnet~4.6 with extended thinking (a 4000-token thinking
+budget, temperature~1.0, up to 8000 output tokens), scoring each answer against
+the question's weighted rubric subpoints, awarding each sub-point independently
+before summing. The shared neutral answerer (used by \texttt{zep-cloud},
+\texttt{mem0-platform}, and \texttt{graphify-oss}) is also Claude Sonnet~4.6 with
+a $\approx$3500-token thinking budget; it sees only the context each system
+retrieves, with no access to the corpus or the ground truth. Retrieval depth is
+top-$K=10$ wherever configurable.
+
+\paragraph{Per-system pins.}
+\texttt{gbrain}: version \texttt{0.41.6.0}; hybrid BM25 + dense-vector + graph
+retrieval over a Postgres-backed entity/event index; ZeroEntropy
+\texttt{zembed-1} embeddings; synchronous ingest (no readiness drain); native
+\texttt{think} synthesizer used as the answerer (per the answerer policy in
+Section~\ref{sec:exp:setup}); top-$K=10$.
+\texttt{zep-cloud}: client \texttt{3.22.0}, hosted at \texttt{api.getzep.com/v2}
+(FREE plan); hosted, undisclosed extractor and embeddings; retrieval with
+\texttt{scope="edges"}, limit $\min(K,50)$, and the \texttt{rrf} reranker;
+asynchronous ingest gated by a probe-edge drain
+(\texttt{graph.edge.get\_by\_graph\_id}; max wait 1800\,s; 15\,s poll; 60\,s
+floor; stop on four consecutive stable edge counts; small-tier graph settled at
+661 edges); \texttt{Retry-After} headers honored and \texttt{graph.get} polled
+after each reset.
+\texttt{mem0-platform}: client \texttt{mem0ai}~\texttt{2.0.2}, hosted at
+\texttt{api.mem0.ai/v3} (FREE plan); hosted, undisclosed extractor and
+embeddings; v2 \texttt{search} filtered to the run's \texttt{user\_id} at
+top-$K=10$; asynchronous ingest gated by a probe-\emph{search} drain
+(\texttt{search("decision", top\_k=100)}; max wait 900\,s; 10\,s poll; 60\,s
+floor; stop on four consecutive \emph{non-zero} stable counts; extraction settled
+at $\approx$81 memories after $\approx$420\,s); a fresh \texttt{user\_id} per
+attempt.
+\texttt{graphify-oss}: \texttt{safishamsi/graphify} v8; PyPI \texttt{graphifyy}
+\texttt{0.8.20}; pinned commit \texttt{b07f0eb}; embedding-free keyword-seeded
+BFS (depth~2) over \texttt{graph.json}; extraction LLM is the upstream-hardcoded
+Claude Sonnet~4.6; \texttt{as\_of} accepted but ignored (declares only the
+\texttt{recall} capability); synchronous ingest; top-$K=10$; reported from a
+Docker run (1.14\,GB image), with a host-installed run within noise
+($0.206$ vs.\ $0.220$).
+
+\paragraph{Controlled-extractor probe (appendix only).}
+Mem0 \emph{OSS} (\texttt{mem0ai}~\texttt{2.0.2}) configured to extract with
+Claude Sonnet~4.6 (\texttt{anthropic:claude-sonnet-4-6}, max output 2000 tokens,
+temperature~0.1) over OpenAI \texttt{text-embedding-3-small} and a local Qdrant
+store, top-$K=10$, synchronous \texttt{Memory.add()}. This is a controlled probe,
+not a shipped product; see Appendix~\ref{app:extended}.
+
+%------------------------------------------------------------------------------
+% D. Annotation and Audit Process
+%------------------------------------------------------------------------------
+\section{Annotation and Audit Process}
+\label{app:annotation}
+\bench{} has no human-authored annotation layer: ground-truth answers are
+deterministic projections of the source-of-truth graph (Stage~B,
+Section~\ref{sec:design:generation}), and rubric sub-criteria are generated
+alongside each question and pinned to the graph. The ``annotation'' that does
+occur is a three-wave manual \emph{audit} of the machine-generated artifacts,
+not a labeling pass. Each wave applied a fixed checklist---slot-ID uniqueness,
+persona-registry coverage and name disambiguation, ground-truth/corpus label
+agreement, citation resolvability, supersession-edge integrity, and natural
+question phrasing---and logged every change in per-tier \texttt{CHANGELOG.md}
+files with pre-patch snapshots preserved at each wave. The six defect classes
+found, and the specific corrections applied, are enumerated in
+Section~\ref{sec:generation-corrections} and in the datasheet's
+preprocessing/cleaning subsection (Appendix~\ref{app:datasheet}). No corrections
+altered the underlying source-of-truth graph; they brought the shipped artifacts
+and citations back into agreement with it.
+
+% Extended annotation/audit detail (relocated) --- opens its own
+% \section{...(extended)} and carries the migrated \label{sec:generation-corrections}.
+\input{sections/app_annotation_audit_detail}
+
+%------------------------------------------------------------------------------
+% E. Extended Results
+%------------------------------------------------------------------------------
+\section{Extended Results}
+\label{app:extended}
+\paragraph{Controlled-extractor probe: Mem0 OSS with a Sonnet extractor.}
+Because the hosted \texttt{mem0-platform} extractor is undisclosed and not
+user-configurable, we ran a controlled probe to separate the contribution of
+Mem0's \emph{pipeline} (its extraction-and-vector-search protocol) from the
+contribution of its server-side \emph{extraction model}. Holding the wire
+protocol and retrieval logic fixed and substituting Claude Sonnet~4.6 as the
+extractor (configuration in Appendix~\ref{app:hyperparams}) raised the small-tier
+rubric mean from the hosted product's $0.221$ to $0.479$, a $+0.258$ swing
+attributable to nothing but the extractor. We report this only as a probe into
+where the Mem0 pipeline's ceiling lies; it is \emph{not} a system any user
+deploys and must not be read as a leaderboard entry. Its role in the main text is
+the localization argument in Section~\ref{sec:exp:bytype}: the bottleneck of the
+shipped hosted product is its extraction model, not its protocol.
+
+\paragraph{Replication and variance.}
+A host-vs-Docker replication of \texttt{graphify-oss} reproduced the same
+$0.21$--$0.22$ small-tier mean ($0.206$ vs.\ $0.220$) while individual question
+scores swung by up to $\pm0.55$, which is the basis for the single-seed variance
+caveat in Section~\ref{sec:exp:setup}. Full per-question score tables, the
+per-system failure-mode counts, and the readiness-gate before/after breakdowns
+referenced in Section~\ref{sec:exp:readiness} are reproducible by running the
+released harness on the released data.
+
+% Extended analysis (relocated from Experiments body) --- CONTINUES this
+% \section{Extended Results}; opens no new \section; carries migrated
+% \label{sec:exp:gbrain}, per-system autopsies, readiness write-ups.
+\input{sections/app_extended_analysis}
+
+%------------------------------------------------------------------------------
+% F. Example Benchmark Instances
+%------------------------------------------------------------------------------
+\section{Example Benchmark Instances}
+\label{app:examples}
+To make the instance format concrete, each released question carries an
+identifier, a category code (C1--C6 or \textsc{Emergent}), a natural-language
+\texttt{text} with three paraphrases, a category-specific structured
+\texttt{ground\_truth\_answer}, weighted \texttt{rubric\_subpoints} (each pairing
+a positive \texttt{criterion} with an explicit \texttt{fail\_criterion}), a list
+of \texttt{evidence\_artefact\_ids}, and metadata (including a \texttt{leak\_score}
+and dated audit notes). As a concrete example, a C1 (supersession) instance asks,
+verbatim: \emph{``What's Helix's current data retention policy? What did it
+replace, when did the change happen, and what drove it?''} Its
+\texttt{ground\_truth\_answer} records \texttt{current\_value},
+\texttt{prior\_value}, \texttt{change\_date}, \texttt{change\_reason}, and a
+\texttt{scope\_note}; four rubric sub-points at $0.25$ each score one field
+apiece; and it is licensed by six corpus artifacts spanning two events (a meeting
+transcript, a confirming email thread, and their secondary witnesses). Complete
+machine-readable instances ship in the repository under \texttt{datasets/helix/}.
+
+\end{document}

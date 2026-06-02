@@ -1,0 +1,6 @@
+vendored_at: 2026-05-27T03:03:10Z
+commit_sha: b07f0eb6a7d336142430a6c64ef23ae013255690
+branch: v8
+upstream: https://github.com/safishamsi/graphify.git
+package_name: graphifyy
+package_version: 0.8.20

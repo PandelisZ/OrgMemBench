@@ -1,0 +1,37 @@
+# Infrastructure the SELF-HOSTED memory systems need. Bring up only what you run.
+#   mem0      -> qdrant
+#   graphiti  -> neo4j (with APOC)        (Zep's OSS engine, self-hosted)
+#   gbrain    -> gbrain-pg (Postgres backend; avoids PGLite single-writer lock).
+#                Host gbrain CLI, but `gbrain init --url postgres://...@:5433/gbrain`.
+# Hosted variants need NO local service, only an API key:
+#   mem0-platform -> MEM0_API_KEY  ;  zep-cloud -> ZEP_API_KEY
+# See docker/<system>.md for per-system detail. Keys go in your environment / .env
+# (never commit them); the harness reads them at run time.
+services:
+  qdrant:                       # mem0 vector store
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333", "6334:6334"]
+    volumes: ["qdrant_data:/qdrant/storage"]
+
+  neo4j:                        # zep / graphiti temporal graph
+    image: neo4j:5.26-community
+    ports: ["7474:7474", "7687:7687"]
+    environment:
+      # Single source of truth: NEO4J_PASSWORD from .env (compose auto-loads it).
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:-orgmembench-local}"
+      NEO4J_PLUGINS: '["apoc"]'
+    volumes: ["neo4j_data:/data"]
+
+  gbrain-pg:                     # gbrain backend — Postgres + pgvector (not
+    image: pgvector/pgvector:pg16  # PGLite, which single-writes and stale-locks
+                                 # under our
+    ports: ["5433:5432"]         # 121-sequential-capture load). Disposable: drop
+    environment:                 # the volume to wipe + reinit the brain.
+      POSTGRES_PASSWORD: "${GBRAIN_PG_PASSWORD:-gbrain}"
+      POSTGRES_DB: "gbrain"
+    volumes: ["gbrain_pg_data:/var/lib/postgresql/data"]
+
+volumes:
+  qdrant_data:
+  neo4j_data:
+  gbrain_pg_data:

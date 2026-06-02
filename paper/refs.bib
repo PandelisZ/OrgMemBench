@@ -1,0 +1,200 @@
+%==============================================================================
+% refs.bib --- OrgMemBench paper references
+%==============================================================================
+% BibTeX discipline (see docs/publishing-a-paper-2026.md section 1.4):
+%   - always include a `url` or `doi` field
+%   - inproceedings for conference papers, article for journals,
+%     misc with howpublished={\url{...}} for arXiv preprints
+%   - keep this file in version control alongside main.tex; arXiv processes
+%     .bib -> .bbl automatically (2025 update)
+%
+% IMPORTANT BibTeX gotcha: BibTeX has no inline comments and it scans the whole
+% file for an at-sign followed by an entry type. So a comment must never contain
+% an at-sign immediately followed by an entry-type word --- it would be parsed
+% as a (broken) entry. Every "TODO verify" note below sits in its own block
+% ABOVE the entry it concerns, never on a field line.
+%
+% Entries with a "TODO verify" note have a field (year / venue / arXiv id /
+% page numbers) that should be checked against the canonical source before
+% submission. Citation KEYS are stable; only the flagged metadata needs
+% confirmation. Do not trust the flagged values blindly.
+%==============================================================================
+
+
+%------------------------------------------------------------------------------
+% Memory benchmarks (the directly-competitive prior work --- guide 3.3 requires
+% engaging these head on)
+%------------------------------------------------------------------------------
+
+% LoCoMo --- very-long-term conversational memory benchmark (ACL 2024).
+@inproceedings{maharana2024locomo,
+  title     = {Evaluating Very Long-Term Conversational Memory of {LLM} Agents},
+  author    = {Maharana, Adyasha and Lee, Dong-Ho and Tulyakov, Sergey and
+               Bansal, Mohit and Barbieri, Francesco and Fang, Yuwei},
+  booktitle = {Proceedings of the 62nd Annual Meeting of the Association for
+               Computational Linguistics (ACL)},
+  year      = {2024},
+  eprint    = {2402.17753},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url       = {https://arxiv.org/abs/2402.17753}
+}
+
+% LongMemEval --- benchmark for long-term interactive memory of chat assistants.
+% TODO verify final venue/year: preprint is arXiv 2410.10813 (Oct 2024);
+% listed here as ICLR 2025 --- confirm before submission.
+@inproceedings{wu2024longmemeval,
+  title     = {{LongMemEval}: Benchmarking Chat Assistants on Long-Term
+               Interactive Memory},
+  author    = {Wu, Di and Wang, Hongwei and Yu, Wenhao and Zhang, Yuwei and
+               Chang, Kai-Wei and Yu, Dong},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025},
+  eprint    = {2410.10813},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url       = {https://arxiv.org/abs/2410.10813}
+}
+
+% BEAM --- long-term memory benchmark (ICLR 2026). Verified citation
+% (landscape.md item 5.1): title, authors, arXiv id, and venue confirmed.
+@inproceedings{beam2025,
+  title     = {Beyond a Million Tokens: Benchmarking and Enhancing
+               Long-Term Memory in {LLMs}},
+  author    = {Tavakoli, Mohammad and Salemi, Alireza and Ye, Carrie and
+               Abdalla, Mohamed and Zamani, Hamed and Mitchell, J. Ross},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  eprint    = {2510.27246},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  url       = {https://arxiv.org/abs/2510.27246}
+}
+
+% MemoryBench --- related memory + continual-learning benchmark (Ai et al., 2025).
+% Title, authors, and arXiv id verified 2026-06.
+@misc{memorybench2025,
+  title        = {{MemoryBench}: A Benchmark for Memory and Continual Learning in {LLM} Systems},
+  author       = {Ai, Qingyao and Tang, Yichen and Wang, Changyue and Long, Jianming and
+                  Su, Weihang and Liu, Yiqun},
+  year         = {2025},
+  eprint       = {2510.17281},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  howpublished = {\url{https://arxiv.org/abs/2510.17281}}
+}
+
+% MemoryAgentBench --- evaluating memory in LLM agents via incremental
+% multi-turn interaction (Hu et al., 2025; arXiv 2507.05257).
+% TODO verify: exact author list and question/task counts against the PDF
+% (landscape.md items 4 and 6 flag both as uncertain).
+@misc{hu2025memoryagentbench,
+  title        = {Evaluating Memory in {LLM} Agents via Incremental Multi-Turn
+                  Interactions},
+  author       = {Hu, Yuanzhe and Wang, Yu and McAuley, Julian},
+  year         = {2025},
+  eprint       = {2507.05257},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  howpublished = {\url{https://arxiv.org/abs/2507.05257}},
+  note         = {Verify author list and task/question counts before submission.}
+}
+
+
+%------------------------------------------------------------------------------
+% Memory systems (baselines)
+%------------------------------------------------------------------------------
+
+% Mem0 --- scalable long-term memory for production AI agents.
+% TODO verify year: preprint is arXiv 2504.19413 (Apr 2025).
+@misc{mem0_2024,
+  title        = {{Mem0}: Building Production-Ready {AI} Agents with Scalable
+                  Long-Term Memory},
+  author       = {Chhikara, Prateek and Khant, Dev and Aryan, Saket and
+                  Singh, Taranjeet and Yadav, Deshraj},
+  year         = {2025},
+  eprint       = {2504.19413},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  howpublished = {\url{https://arxiv.org/abs/2504.19413}}
+}
+
+% Zep / Graphiti --- temporal knowledge-graph memory layer.
+% TODO verify year: preprint is arXiv 2501.13956 (Jan 2025).
+@misc{zep_graphiti_2025,
+  title        = {{Zep}: A Temporal Knowledge Graph Architecture for Agent Memory},
+  author       = {Rasmussen, Preston and Paliychuk, Pavlo and Beauvais, Travis and
+                  Ryan, Jack and Chalef, Daniel},
+  year         = {2025},
+  eprint       = {2501.13956},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL},
+  howpublished = {\url{https://arxiv.org/abs/2501.13956}}
+}
+
+% gbrain --- Garry Tan's open-source hybrid (BM25 + vector + graph) agent-memory
+% system (MIT). Canonical repo + version verified 2026-06: github.com/garrytan/gbrain.
+@misc{gbrain,
+  title        = {{gbrain}: An Open Hybrid Retrieval Memory System for {AI} Agents},
+  author       = {Tan, Garry and {gbrain contributors}},
+  year         = {2026},
+  howpublished = {\url{https://github.com/garrytan/gbrain}},
+  note         = {Open-source software (MIT); evaluated at version 0.41.6.0.}
+}
+
+% graphify --- open-source graph-traversal (BFS/DFS) agent-memory library,
+% embedding-free. TODO verify: canonical project URL and version (v8 evaluated).
+@misc{graphify_oss,
+  title        = {graphify: A Graph-Traversal Memory Library for {AI} Agents},
+  author       = {Shamsi, Safi and {graphify contributors}},
+  year         = {2025},
+  howpublished = {\url{https://github.com/safishamsi/graphify}},
+  note         = {Open-source software; verify canonical URL and version before submission.}
+}
+
+
+%------------------------------------------------------------------------------
+% Datasets / benchmark methodology
+%------------------------------------------------------------------------------
+
+% Datasheets for Datasets --- Gebru et al., CACM 2021 (preprint arXiv 1803.09010).
+@article{gebru2021datasheets,
+  title   = {Datasheets for Datasets},
+  author  = {Gebru, Timnit and Morgenstern, Jamie and Vecchione, Briana and
+             Vaughan, Jennifer Wortman and Wallach, Hanna and
+             Daum{\'e} III, Hal and Crawford, Kate},
+  journal = {Communications of the ACM},
+  volume  = {64},
+  number  = {12},
+  pages   = {86--92},
+  year    = {2021},
+  doi     = {10.1145/3458723},
+  url     = {https://arxiv.org/abs/1803.09010}
+}
+
+% Croissant --- ML dataset metadata format (arXiv 2403.19546).
+@misc{croissant2024,
+  title        = {Croissant: A Metadata Format for {ML}-Ready Datasets},
+  author       = {Akhtar, Mubashara and Benjelloun, Omar and Conforti, Costanza
+                  and Gijsbers, Pieter and Giner-Miguelez, Joan and Jain, Nitisha
+                  and Kuchnik, Michael and Lhoest, Quentin and Marcenac, Pierre
+                  and Maskey, Manil and others},
+  year         = {2024},
+  eprint       = {2403.19546},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  howpublished = {\url{https://arxiv.org/abs/2403.19546}}
+}
+
+
+%------------------------------------------------------------------------------
+% PLACEHOLDER template entry --- copy this shape for any new citation.
+% (Not \cite'd anywhere; harmless if left unused. Delete when done.)
+%------------------------------------------------------------------------------
+@misc{placeholder_key,
+  title        = {PLACEHOLDER --- replace with a real reference},
+  author       = {Lastname, First},
+  year         = {2026},
+  howpublished = {\url{https://example.org}},
+  note         = {TODO: add a real url or doi; delete this stub once unused.}
+}

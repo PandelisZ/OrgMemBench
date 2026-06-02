@@ -1,0 +1,5 @@
+[
+  "Release Cadence & Deployment Strategy | Started with manual hotfixes in 2020, moved to CI/CD in 2021, adopted blue\u2011green releases in 2022, switched to canary rollouts in 2023, and finally settled on GitLab Auto\u2011Deploy with feature flags in 2024, with occasional rollback to manual for critical fixes in 2025.",
+  "Customer Tiering & Pricing Model | Began with flat\u2011rate pricing for pilot carriers in 2020, introduced tiered usage plans in 2021, added volume\u2011based discounts in 2022, rolled back to a single \u201cEnterprise\u201d tier in 2023 after churn, and re\u2011introduced multi\u2011tier with AI\u2011driven add\u2011ons in 2026.",
+  "On\u2011Call Rotation & Incident Management | Used ad\u2011hoc on\u2011call in 2020, formalized rotating on\u2011call in 2021, added escalation matrix in 2022, switched to PagerDuty with 24/7 coverage in 2023, and later reverted to a hybrid model with on\u2011site engineers in 2025 after high\u2011severity outages."
+]

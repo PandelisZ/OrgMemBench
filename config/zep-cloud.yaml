@@ -1,0 +1,73 @@
+# OrgMemBench — Zep Cloud adapter configuration
+#
+# Engine: Zep Cloud (getzep.com) — managed, hosted Graphiti service.
+#         This is the HOSTED product, distinct from the self-hosted
+#         graphiti-core adapter (config/zep.yaml, adapter name "zep").
+#
+# No local services to stand up.  Only ZEP_API_KEY is required.
+#
+# Reference:
+#   https://pypi.org/project/zep-cloud/
+#   https://help.getzep.com/v2/quickstart
+#   https://help.getzep.com/searching-the-graph
+#   https://help.getzep.com/sdk-reference/graph/search
+
+# ── Pinned SDK version ──────────────────────────────────────────────────────
+# zep-cloud 3.22.0 — released 2026-05-04
+# Verify with: pip show zep-cloud | grep Version
+#
+# NOTE: The version recorded here is the *client SDK* version.  The hosted
+#       Zep Cloud service is independently versioned and has no
+#       client-pinnable service version number.  The adapter appends "+cloud"
+#       to distinguish this from the OSS graphiti-core adapter.
+version: "3.22.0"
+
+# ── Authentication ───────────────────────────────────────────────────────────
+# ZEP_API_KEY is the ONLY credential needed.  Obtain it from the Zep Cloud
+# dashboard at https://cloud.getzep.com.
+#
+# NEVER hard-code the key here.  Pass it via the environment variable:
+#
+#   export ZEP_API_KEY="z_..."
+#
+# The adapter reads os.environ["ZEP_API_KEY"] at run time (not at construct).
+# You may also pass it programmatically:
+#   ZepCloudAdapter(config={"zep_api_key": "z_..."}, dry_run=False)
+#
+# No ANTHROPIC_API_KEY or OPENAI_API_KEY needed — all LLM/embedding work
+# runs inside Zep Cloud's infrastructure.
+# zep_api_key: "${ZEP_API_KEY}"   # for documentation only; do not uncomment
+
+# ── Benchmark namespace ──────────────────────────────────────────────────────
+# group_id isolates one benchmark run's graph from others.
+# Change per-run or per-company to avoid cross-contamination.
+# Example: "orgmembench-small-2026-05-25"
+group_id: "orgmembench"
+
+# ── Retrieval ────────────────────────────────────────────────────────────────
+# Number of edge results to fetch per query (Zep Cloud caps at 50).
+num_results: 20
+
+# Reranker strategy for graph.search.
+# Options: rrf (default), mmr, node_distance, episode_mentions, cross_encoder
+reranker: "rrf"
+
+# ── Temporal / as-of queries ─────────────────────────────────────────────────
+# When OrgMemBench passes as_of="YYYY-MM-DD" the adapter constructs a
+# SearchFilters with:
+#
+#   valid_at   <= T          (fact had begun by T)
+#   invalid_at  > T  OR  IS NULL   (fact had not ended by T)
+#
+# This is a "valid-time slice" — it answers "what was true on date T?"
+# Zep Cloud exposes this via SearchFilters + DateFilter in the zep-cloud SDK:
+#
+#   from zep_cloud.types import SearchFilters, DateFilter
+#   search_filter = SearchFilters(
+#       valid_at=[[DateFilter(comparison_operator="<=", date=iso_t)]],
+#       invalid_at=[[DateFilter(comparison_operator="IS NULL")],
+#                   [DateFilter(comparison_operator=">",  date=iso_t)]],
+#   )
+#
+# Temporal filters are only applied when scope="edges" (Zep Cloud constraint).
+# No extra config needed; controlled entirely by the as_of argument at query time.

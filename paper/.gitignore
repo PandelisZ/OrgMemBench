@@ -1,0 +1,22 @@
+# LaTeX build cruft
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+*.lof
+*.lot
+*.run.xml
+*.bcf
+_minted-*/
+
+# Build output (root PDF). Do NOT ignore figures/*.pdf --- those are committed
+# assets. The leading slash anchors this to the paper/ root only.
+/main.pdf
+
+# Keep committed figure PDFs tracked even though build cruft is ignored.
+!figures/*.pdf

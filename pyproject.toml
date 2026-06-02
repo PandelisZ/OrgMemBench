@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orgmembench"
+version = "0.1.0"
+description = "OrgMemBench: a benchmark for long-horizon organizational memory."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Jack Gardner" }]
+dependencies = [
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "httpx>=0.27",
+    "numpy>=1.24",
+    "anthropic>=0.40",     # judge + LLM roles (Claude Sonnet 4.6, extended thinking)
+]
+
+[project.optional-dependencies]
+# Per-system adapter deps are extras so the core harness installs cleanly even
+# when a given system isn't being run. Versions are PINNED for reproducibility
+# (the adapters also record the runtime version into each result).
+# Note: gbrain has no Python SDK (TypeScript CLI, install via bun — see
+# config/gbrain.yaml for the pinned commit).
+mem0 = ["mem0ai==2.0.2", "fastembed"]          # OSS + Platform (same SDK); fastembed enables mem0's hybrid BM25+vector (its recommended config)
+graphiti = ["graphiti-core[anthropic]==0.29.1"]  # Zep's OSS temporal-graph engine (self-hosted)
+zep-cloud = ["zep-cloud==3.22.0"]              # Zep Cloud (hosted)
+dev = ["pytest>=8", "ruff>=0.6"]
+all = ["orgmembench[mem0,graphiti,zep-cloud,dev]"]
+
+[project.scripts]
+orgmembench = "orgmembench.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["orgmembench*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

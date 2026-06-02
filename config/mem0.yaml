@@ -1,0 +1,65 @@
+# OrgMemBench — Mem0 adapter configuration
+#
+# Pinned mem0ai version: 2.0.2  (released 2026-05-07)
+# Install: pip install "mem0ai==2.0.2"
+# Docs:    https://docs.mem0.ai/open-source/configuration
+#
+# ── How this config is used ──────────────────────────────────────────────────
+# The harness reads this file and passes it as `config=` to Mem0Adapter().
+# Keys map 1-to-1 to the fields read by Mem0Adapter._build_mem0_config().
+# Fields not listed here get the adapter's own defaults (identical to what
+# is shown below — listed here for explicitness and reproducibility).
+#
+# ── Required environment variables ───────────────────────────────────────────
+#   ANTHROPIC_API_KEY   — LLM (Claude Sonnet 4.6) for mem0 fact extraction
+#   OPENAI_API_KEY      — Embedder (text-embedding-3-small); mem0 has no
+#                         Anthropic embedder provider, so OpenAI is used for
+#                         embeddings even when Anthropic is the LLM.
+#                         Alternative: swap embedder to "huggingface" or
+#                         "ollama" to avoid OpenAI entirely (see comment below).
+#
+# ── Vector store ─────────────────────────────────────────────────────────────
+# Default: Qdrant running at localhost:6333 (see docker/mem0.md for setup).
+# To use the bundled in-process Qdrant (no Docker), set:
+#   vector_store_path: /tmp/orgmembench_qdrant
+# Warning: on-disk mode is slower and not recommended for large tiers.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Pinned version (harness check_version() warns on drift) ──────────────────
+version: "2.0.2"
+
+# ── LLM: Anthropic Claude Sonnet 4.6 ─────────────────────────────────────────
+# mem0 uses the LLM at ingest time for fact extraction / memory consolidation,
+# and optionally for answer generation. Provider string "anthropic" maps to
+# mem0.llms.anthropic.AnthropicLLM (confirmed in mem0/utils/factory.py).
+# Ref: https://docs.mem0.ai/components/llms/models/anthropic
+llm_provider: "anthropic"
+llm_model: "claude-sonnet-4-6"
+llm_temperature: 0.1          # low temperature for deterministic fact extraction
+llm_max_tokens: 2000
+
+# ── Embedder: OpenAI text-embedding-3-small ───────────────────────────────────
+# mem0 does not ship an Anthropic embedder provider (confirmed by inspecting
+# mem0/utils/factory.py EmbedderFactory.provider_to_class). OpenAI's
+# text-embedding-3-small is the default and is widely supported.
+#
+# To avoid OpenAI entirely, swap to:
+#   embedder_provider: "huggingface"
+#   embedder_model: "sentence-transformers/all-MiniLM-L6-v2"
+# (requires: pip install sentence-transformers)
+embedder_provider: "openai"
+embedder_model: "text-embedding-3-small"
+
+# ── Vector store: Qdrant (remote) ─────────────────────────────────────────────
+# Run Qdrant locally with Docker (see docker/mem0.md).
+# Ref: https://docs.mem0.ai/components/vector-databases/qdrant
+vector_store_provider: "qdrant"
+vector_store_host: "localhost"
+vector_store_port: 6333
+vector_store_collection: "orgmembench"
+
+# Uncomment to use on-disk Qdrant instead of a Docker container:
+# vector_store_path: "/tmp/orgmembench_qdrant"
+
+# ── Retrieval ─────────────────────────────────────────────────────────────────
+retrieval_top_k: 10           # mem0 search() top_k; increase for harder tiers

@@ -1,0 +1,274 @@
+%==============================================================================
+% Benchmark Construction Detail --- appendix.
+% Authored by the design agent. Gathers content relocated out of the body to keep
+% the Design section at ~1.25pp:
+%
+%   FROM sections/design.tex (body):
+%     * the full Helix company-skeleton enumeration (founders, per-year arcs,
+%       documentation-discipline eras, product lines, tooling-replacement timeline)
+%     * the expanded "why synthetic" control + privacy reasons
+%     * the ground-truth / rubric field schemas      --- carries \label{sec:design:rubric}
+%     * the persona library + document-genre taxonomy + artifact counts
+%                                                     --- carries \label{sec:design:personas}
+%
+%   FROM the gutted sections/generation.tex (handed to design):
+%     * the Stage~A--F generation pipeline
+%     * the genre taxonomy
+%     * the documentation-discipline eras
+%     * the full circularity structural-defenses enumeration
+%
+% This file is \input from main.tex's appendix block. It does NOT re-issue
+% \appendix. It defines \label{app:construction}. The body refs in design.tex
+% (\S\ref{app:construction}) and the pointer in sections/generation.tex resolve
+% here. Stage~E references the C1--C6 taxonomy, which lives in the Design body, so
+% it \ref's tab:categories / sec:design:taxonomy normally.
+%
+% This file is now ALSO the physical home of the per-category question-count
+% table \label{tab:design:counts} (relocated out of sections/design.tex during
+% the body-shortening pass). It sits beside sec:design:personas; design.tex now
+% only \ref's it. Do not duplicate this \label back into design.tex.
+%==============================================================================
+
+\section{Benchmark Construction Detail}
+\label{app:construction}
+
+This appendix collects the construction detail relocated from the Design section
+(Section~\ref{sec:design}): the full Helix company skeleton, the remaining
+arguments for a synthetic corpus, the ground-truth and rubric field schemas, the
+persona library and document-genre taxonomy with artifact counts, and the
+stage-by-stage generation pipeline.
+
+\subsection{The Helix Company Skeleton}
+\label{app:construction:helix}
+
+The seed organization, \textbf{Helix Logistics}, is instantiated with a coherent
+multi-year narrative arc: founded in 2020 by Maya Patel and Daniel Kim, shipping
+the Helix API in 2021, a Series~A and a business-to-consumer to mid-market pivot
+in 2022, a 2023 customer escalation accompanied by a fifteen-percent layoff and a
+change of COO, the Helix AI Optimizer in 2024, a documentation overhaul in 2025,
+and a planned Series~B in 2026. A fixed company skeleton pins the founding year,
+founders, per-year arcs, documentation-discipline eras, product lines,
+customer-arc count, and a tooling timeline with explicit replacements (for
+example, Salesforce replaces HubSpot in 2022-Q1 and Confluence replaces Notion in
+2023-Q1). These replacements are not decoration: they seed the temporal and
+supersession structure that the hard question categories then probe.
+
+\subsection{Why Synthetic: Control and Privacy}
+\label{app:construction:why-synthetic}
+
+The body (Section~\ref{sec:design:why-synthetic}) states the decisive reason for a
+synthetic corpus---no overlap with any system's pretraining---in full. Two further
+reasons complete the rationale. First, \textbf{control}: the texture is
+realistic---drafts, contradictions, half-finished threads, decisions that
+change---while the ground truth is fully known, because answers are projected from
+the source-of-truth graph rather than adjudicated after the fact from messy free
+text. A real, scraped corpus would force a labor-intensive and error-prone
+annotation effort and would still leave the gold answers contestable; here the
+answer key is constructed before the evidence, and the evidence is generated to
+license it. Second, \textbf{privacy}: no real company's confidential
+communications---emails, Slack messages, contracts, incident reports---are
+exposed, which both removes a serious release hazard and obviates the personally
+identifiable information scrubbing that any real organizational corpus would
+require. The cost is the well-known generalization gap between synthetic and real
+corpora, which we address directly in our limitations: synthetic texture is a
+model of organizational communication, not a sample of it, and we make no claim
+that absolute scores transfer unchanged to a specific real company.
+
+\subsection{Ground Truth and Rubric Structure}
+\label{sec:design:rubric}
+
+Because the corpus is the \emph{evidence} and the source-of-truth graph is the
+\emph{answer key}, every ground-truth answer is a deterministic projection of the
+graph rather than free text recalled by a model. Each question record carries an
+identifier, a category, a natural-language question \texttt{text}, three
+paraphrases (so that scoring is robust to phrasing), a structured
+\texttt{ground\_truth\_answer}, weighted \texttt{rubric\_subpoints}, a list of
+\texttt{evidence\_artefact\_ids} naming the specific corpus artifacts that
+license the answer, and metadata---including a \texttt{leak\_score} that measures
+how much the surface question text gives the answer away, plus dated audit and
+provenance notes recorded across validation waves.
+
+% {\sloppy} + a local \emergencystretch let TeX relax inter-word spacing across
+% this paragraph's long unbreakable \texttt identifiers (the canonical, \ref'd
+% field-schema names), clearing the residual overfull \hbox warnings without
+% altering any identifier. The identifiers stay verbatim by design.
+{\sloppy\emergencystretch=3em
+The \texttt{ground\_truth\_answer} is a set of category-specific structured
+fields, not a single string, which is precisely what makes it a projection of
+the graph. C1 records \texttt{current\_value}, \texttt{prior\_value},
+\texttt{change\_date}, \texttt{change\_reason}, and a \texttt{scope\_note}. C2
+records the \texttt{decision}, its \texttt{deciders}, the \texttt{decision\_date},
+the \texttt{alternatives}, and the \texttt{deciding\_factor}. C3 separates
+\texttt{original\_value} and \texttt{corrected\_value} from
+\texttt{original\_recorded\_at}, \texttt{correction\_recorded\_at}, and
+\texttt{true\_occurred\_at}, making the record-time/world-time distinction
+explicit. C4 records an \texttt{as\_of\_date} together with \texttt{asof\_facts},
+\texttt{changed\_facts}, and \texttt{replacements}. C5 records a \texttt{claim},
+an \texttt{evidence\_summary}, \texttt{evidence\_types},
+\texttt{testimony\_attribution}, and \texttt{inferential\_steps}. C6 records
+\texttt{party\_a}, \texttt{party\_b}, each party's claim and date, a
+\texttt{resolution\_status}, and \texttt{resolution\_details}. The large-tier
+emergent-pattern category (out of scope here) records a ground-truth answer
+alongside its \texttt{facets}, a \texttt{temporal\_qualifier}, and a
+\texttt{formalization} of the de-facto rule.
+\par}
+
+Scoring is \textbf{rubric-based facet coverage}, not exact match. Each question
+carries weighted sub-points---C1 has four sub-points at $0.25$ each; C3, C4, C5,
+and C6 typically carry three sub-points at roughly $0.333$ each. (Large-tier
+emergent-pattern questions, out of scope here, carry seven to eight facet
+sub-points with explicit per-facet \texttt{weight} and \texttt{evidence\_ids}.)
+Each sub-point pairs a positive
+\texttt{criterion} (what must be asserted, with paraphrase accepted) with an
+explicit \texttt{fail\_criterion} (what voids credit). For example, a C2
+sub-point requires naming all of the relevant deciders and fails only if none are
+mentioned; a C5 sub-point awards full credit for listing all three evidence items
+with the correct primary/secondary roles, half credit for two, and zero below
+two. This facet-coverage structure lets multiple correct phrasings earn full
+credit while omissions are penalized deterministically. The
+\texttt{evidence\_artefact\_ids} field ties each answer to its licensing
+artifacts---one C1 question, for instance, is grounded in six artifacts spanning
+two distinct events---which enables per-question evidence audits and makes the
+basis for every gold answer inspectable.
+
+\subsection{Persona Library and Document Genres}
+\label{sec:design:personas}
+
+A multi-author corpus is only meaningful if its authors have distinct, consistent
+voices, so \bench{} draws from a persona library of $72$ named personas. Each
+persona record carries a stable identifier and display name, pronouns, join and
+(where applicable) departure years, a dated \texttt{role\_history} so that
+seniority and reporting lines move over time, \texttt{voice\_markers} (hedging
+frequency, emoji use, formality, typical message length, whether the person
+writes long documents), three to five \texttt{signature\_phrases}, a
+documentation-discipline trait, a per-channel communication mix, and
+domain-expertise tags, plus \texttt{is\_long\_tail} and \texttt{is\_founder}
+flags. This gives each author a recognizable voice across the corpus---Maya
+Patel, the CEO, writes terse and data-driven with low documentation discipline
+(``Numbers don't lie''), while Daniel Kim, the CTO, writes long-form narrative
+with high documentation discipline (``Let me walk you through'')---and it is what
+makes the testimony-attribution facets of C5 and the party-attribution facets of
+C6 meaningful: the same fact reads differently depending on who said it and where
+in their role history they said it. The \texttt{is\_long\_tail} flag seeds the
+sparse, rarely mentioned actors that defeat naive retrieval, which is exactly the
+population an organizational memory system must not lose.
+
+The corpus is organized as event folders, each holding one or more artifacts that
+report the same event from different angles. Every artifact begins with a
+metadata block recording its slot ID, event ID, genre, role (primary versus
+secondary witness to the event), author (a persona), and testimony type
+(\texttt{direct} versus \texttt{inferred}). The genres mirror where work actually
+accumulates; in the medium tier the artifact counts are: Slack threads ($115$),
+email threads ($109$), meeting notes ($102$), meeting transcripts ($65$),
+incident reports ($24$), sales/CRM entries ($11$), Notion documents ($9$),
+postmortems ($7$), and one architecture decision record; the small tier spans the
+same genres and additionally includes retrospectives. The texture is realistic by
+construction: meeting transcripts include timestamped turns with
+\texttt{[crosstalk]} and \texttt{[inaudible]} markers and natural disfluencies,
+email threads carry full headers and signature blocks, and the same decision is
+deliberately surfaced in more than one channel---a transcript in which two
+executives talk through a pivot to high-value accounts, followed by an email
+thread that confirms it for the sales team---so that an answer is licensed by
+\emph{cross-channel agreement} rather than a single canonical source. At medium
+scale the corpus comprises $443$ artifacts across $157$ events, split primary
+$152$ / secondary $291$ and direct $289$ / inferred $154$: most facts must be
+triangulated from secondary, partly inferential witnesses rather than read off a
+single record. The small tier holds the same genre mix at reduced scale: $121$
+corpus artifacts across $17$ events. This composition is unchanged from earlier
+builds: the corpus still physically contains the emergent-evidence background
+documents (retained as benign background noise), and only the emergent
+\emph{questions} were removed when that category was deferred to the large tier;
+the corpus itself was not regenerated.
+
+Table~\ref{tab:design:counts} gives the per-category question counts over this
+corpus at both tiers; the Design section (Section~\ref{sec:design:taxonomy})
+points here for the full breakdown.
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{Question counts per category, by tier.} The emergent-pattern
+    category is evaluated only at the large tier and above and is out of scope
+    for the small and medium tiers. Categories are defined in
+    Table~\ref{tab:categories} and Section~\ref{sec:design:taxonomy}.}
+  \label{tab:design:counts}
+  \begin{tabular}{l l c c}
+    \toprule
+    Code & Category & Small ($n$) & Medium ($n$) \\
+    \midrule
+    C1           & Supersession        & 1  & 15 \\
+    C2           & Decision provenance & 2  & 15 \\
+    C3           & Bi-temporal         & 3  & 7  \\
+    C4           & Audit replay        & 1  & 15 \\
+    C5           & Justification chain & 3  & 15 \\
+    C6           & Contradiction       & 1  & 6  \\
+    \midrule
+    \multicolumn{2}{l}{\textbf{Total}} & \textbf{11} & \textbf{73} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Generation Pipeline}
+\label{app:construction:pipeline}
+
+The Helix corpus is entirely synthetic: no human authored any artifact in the
+dataset. As summarized in the body (Section~\ref{sec:design:generation}), every
+artifact is produced by the parameterized, template-driven \texttt{helix-corpus}
+pipeline driving a single \emph{local} open-weight model (\texttt{gpt-oss:20b},
+served via Ollama). The only human input is the choice of scale parameters that
+seed the fictional company---its size, year range, and team topology---after which
+generation proceeds through six ordered stages.
+
+\paragraph{Stages.}
+The pipeline moves from an abstract company description to a fully validated
+question set, projecting ground truth deterministically from a structured
+graph rather than recalling it from free text.
+%
+\emph{Stage~A (canon)} instantiates the fictional company, Helix Logistics:
+founders, multi-year growth arcs, a persona registry of several dozen named
+employees with titles and tenure dates, customer arcs, documentation-discipline
+eras, and a tooling timeline with explicit replacements. The output is structured Markdown and YAML, plus a fixed
+\texttt{skeleton.json} that seeds the temporal and supersession structure used
+downstream.
+%
+\emph{Stage~B (source-of-truth graph)} converts the canon into a ground-truth
+event log and bi-temporal relation graph: each event is keyed to a date range,
+a category, a set of participant persona IDs, and a canonical fact or decision,
+and relations encode supersessions, corrections, and contradictions. Crucially,
+the answers to every downstream question are projected deterministically from
+this graph; the model is never asked to invent ground truth, only to read it
+off a structured record.
+%
+\emph{Stage~C (corpus)} generates a cluster of two to three realistic artifacts
+per event---Slack threads, meeting notes, email chains, retrospectives, ADRs,
+and Notion-style documents---with genre assigned per event from a fixed
+taxonomy. Each artifact carries a structured header recording its slot ID,
+event ID, author, date, and testimony type (\texttt{direct} versus
+\texttt{inferred}).
+%
+\emph{Stage~D (cross-references and noise)} adds cross-artifact references and
+injects realistic distractors---drafts, half-finished threads, contradictions
+among secondary witnesses, and atmosphere artifacts---recording every injected
+distractor in a noise manifest so the corpus stays auditable.
+%
+\emph{Stage~E (questions)} generates the natural-language question texts and
+paraphrases, with answers computed from the Stage~B graph rather than authored
+by the model; questions span the six structured categories (C1--C6; defined in
+Table~\ref{tab:categories} and Section~\ref{sec:design:taxonomy}) plus an
+EMERGENT tier, and each carries its canonical answer, evidence artifact IDs, and
+a weighted rubric.
+%
+\emph{Stage~F (validation)} runs a self-consistency pass over the generated
+output, checking answerability, rubric coherence, and distractor integrity;
+questions that pass become the shipped \texttt{benchmark\_v0.0.jsonl}.
+
+\paragraph{Why this design bounds, but does not eliminate, circularity.}
+Single-model end-to-end generation is circular by construction: the same model
+writes the artifacts, phrases the questions, and performs the self-consistency
+check. Structural defenses---closed-enum event types, graph-projected answers,
+multi-pass critique, and automated sentinels for persona consistency and
+anachronism---reduce this circularity but do not remove it. Following
+\citet{gebru2021datasheets} we document it rather than obscure it, and a
+cross-model validation pass (a frontier model used as an independent validator,
+not as the generator) is planned. The three-wave manual audit and the six defect
+classes it corrected are enumerated in Appendix~\ref{app:annotation} and
+Section~\ref{sec:generation-corrections}.

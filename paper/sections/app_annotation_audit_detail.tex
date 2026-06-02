@@ -1,0 +1,79 @@
+%==============================================================================
+% Annotation and Audit Process (extended) --- appendix continuation.
+% Authored by the generation agent. Relocated here from the former body section
+% sections/generation.tex: the Manual Corrections and Audit Trail subsection,
+% the six per-defect autopsies, and the corrections-closer.
+%
+% This file is \input from main.tex's appendix block IMMEDIATELY AFTER the
+% existing \section{Annotation and Audit Process} (\label{app:annotation}) stub,
+% so it reads as that section's detailed continuation. It does NOT re-issue
+% \appendix and does NOT redefine \label{app:annotation}.
+%
+% It carries the migrated \label{sec:generation-corrections}, which the
+% app:annotation stub (main.tex:253) and the datasheet's preprocessing/cleaning
+% subsection (app:datasheet) both \ref. The label sits on the corrections
+% subsection exactly as it did in the original body section.
+%==============================================================================
+
+\section{Annotation and Audit Process (extended)}
+\label{app:annotation_audit_detail}
+
+This section gives the detailed enumeration promised by the audit overview in
+Section~\ref{app:annotation}. \bench{} has no human-authored annotation layer;
+the ``annotation'' that does occur is the three-wave manual \emph{audit} of the
+machine-generated artifacts described there. Below we enumerate the six defect
+classes that audit found and the specific corrections applied to each.
+
+\subsection{Manual Corrections and Audit Trail}
+\label{sec:generation-corrections}
+
+Synthetic generation at this scale introduces systematic defects, and we treat
+their disclosure as part of the contribution rather than an embarrassment to
+be hidden. Across a three-wave manual audit we identified and corrected six
+classes of defect; every correction is logged in per-tier change logs, and
+pre-patch snapshots of the benchmark files are preserved at each wave so the
+full provenance of the shipped dataset is reconstructable.
+%
+\emph{(1)~Slot-ID collisions.} In the medium tier, the corpus generator reset
+its per-batch artifact counter while the event counter kept advancing,
+producing duplicate slot IDs across distinct event directories; we rebuilt the
+corpus index from scratch, renamed roughly $140$ files, and repointed $35$
+question rows whose evidence citations had resolved to the wrong event cluster.
+%
+\emph{(2)~Persona disambiguation.} The generator occasionally fused surnames
+across personas and, in the medium tier, assigned two distinct people the same
+display name; we corrected the cross-contaminated surnames, renamed the
+lower-seniority member of each duplicate-name pair, and added stub registry
+entries for personas referenced in the corpus but missing from the registry.
+A small number of genuinely ambiguous name occurrences were left unchanged and
+flagged rather than guessed.
+%
+\emph{(3)~Ground-truth/corpus label drift.} Generator-internal testimony labels
+(\texttt{direct\_testimony}, \texttt{inference}) diverged from the corpus header
+convention (\texttt{direct}, \texttt{inferred}); we normalized the affected
+field values so that question-side and corpus-side labels agree.
+%
+\emph{(4)~Spurious supersession edges.} A wave-one audit found that one
+audit-replay (C4) question's supersession structure had been over-specified in
+a way that silently reframed it as a negative-knowledge test with an empty
+replacement set; we rewrote that question to reward the correct bi-temporal
+supersession pattern and corrected a second question's resolution status and an
+inverted rubric criterion.
+%
+\emph{(5)~Phantom-artifact citations.} Several questions cited evidence slot IDs
+with no corresponding file on disk; where a primary artifact was genuinely
+missing we generated it (two new artifacts in the small tier), and elsewhere we
+repointed citation lists to the correct anchor events after the slot-ID fix.
+%
+\emph{(6)~Question rewording.} Eleven small-tier question texts contained
+benchmark-design artifacts that would never appear in a real user query
+(``the system's understanding,'' ``reconstruct the knowledge held by the
+system''); we reworded them to natural phrasings while leaving every
+ground-truth answer and rubric sub-criterion unchanged, preserving the original
+text in metadata.
+%
+None of these corrections altered the underlying source-of-truth graph; they
+brought the shipped artifacts and citations back into agreement with it. We
+regard this audit trail as a feature of the release: the corrections are
+specific, logged, and reversible, and they make the failure modes of automated
+organizational-corpus generation concrete for others building similar datasets.

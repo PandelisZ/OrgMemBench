@@ -1,0 +1,28 @@
+# Dockerfile for the orgmembench-gbrain container.
+# gbrain is installed globally via bun from the pinned commit recorded in
+# config/gbrain.yaml.
+#
+# Why this exists: gbrain has a global PGLite lock (~/.gbrain/brain.pglite/.gbrain-lock)
+# that can persist across process exits, causing back-to-back invocations to
+# hang. Running each benchmark in its own container guarantees a clean lock
+# state per run.
+
+FROM oven/bun:latest
+
+ARG GBRAIN_COMMIT=3a2605e9a0b746a82ab42dd0177fc0f3a666a600
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install gbrain at the pinned commit (must match config/gbrain.yaml).
+RUN bun install -g "github:garrytan/gbrain#${GBRAIN_COMMIT}"
+
+# Brain lives at /data/.gbrain (overrides default ~/.gbrain via HOME).
+ENV HOME=/data \
+    NODE_ENV=production
+
+WORKDIR /data
+RUN mkdir -p /data/.gbrain
+
+CMD ["tail", "-f", "/dev/null"]

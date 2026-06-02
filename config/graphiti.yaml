@@ -1,0 +1,74 @@
+# OrgMemBench — Zep/Graphiti adapter configuration
+#
+# Engine: graphiti-core (getzep/graphiti) — open-source bi-temporal
+#         knowledge-graph engine, self-hosted against Neo4j.
+#
+# Reference:
+#   https://github.com/getzep/graphiti
+#   https://pypi.org/project/graphiti-core/
+#
+# Stand-up: see docker/zep.md
+
+# ── Pinned library version ──────────────────────────────────────────────────
+# graphiti-core 0.29.1 — released 2026-05-21
+# Verify with: pip show graphiti-core | grep Version
+version: "0.29.1"
+
+# ── Graph database: Neo4j ────────────────────────────────────────────────────
+# Graphiti requires Neo4j 5.x Community or Enterprise with the APOC plugin.
+# Values below are defaults; override via environment variables (preferred).
+neo4j:
+  uri:      "${NEO4J_URI:-bolt://localhost:7687}"
+  user:     "${NEO4J_USER:-neo4j}"
+  password: "${NEO4J_PASSWORD:-password}"   # MUST change for non-local deploys
+  # Optional: use a named database (requires Neo4j Enterprise or aura)
+  # database: "orgmembench"
+
+# ── LLM client: Anthropic / Claude Sonnet 4.6 ───────────────────────────────
+# Graphiti ships first-class Anthropic support: pip install graphiti-core[anthropic]
+#
+# AnthropicClient constructor:
+#   from graphiti_core.llm_client.anthropic_client import AnthropicClient
+#   from graphiti_core.llm_client.config import LLMConfig
+#   llm = AnthropicClient(config=LLMConfig(model="claude-sonnet-4-6",
+#                                          api_key=os.environ["ANTHROPIC_API_KEY"],
+#                                          temperature=1.0))
+#
+# NOTE: always pass temperature explicitly to AnthropicClient (do NOT leave it
+#       None — the Anthropic API rejects a null temperature with a 400 error).
+#       See: https://github.com/getzep/graphiti/issues/1103
+llm:
+  provider: "anthropic"
+  model:    "claude-sonnet-4-6"          # OrgMemBench standard judge model
+  api_key:  "${ANTHROPIC_API_KEY}"       # required env var
+  temperature: 1.0                       # Anthropic default; do NOT omit
+
+# ── Embedding ────────────────────────────────────────────────────────────────
+# Graphiti defaults to OpenAI text-embedding-3-small.
+# To use a different provider implement graphiti_core.embedder.EmbedderClient.
+embedder:
+  provider: "openai"
+  model:    "text-embedding-3-small"
+  api_key:  "${OPENAI_API_KEY}"          # required for default embedder
+
+# ── Benchmark namespace ──────────────────────────────────────────────────────
+# group_id isolates one benchmark run's graph from others.
+# Change per-run or per-company to avoid cross-contamination.
+group_id: "orgmembench"
+
+# ── Retrieval ────────────────────────────────────────────────────────────────
+# Number of EntityEdge results to fetch per query before LLM synthesis.
+num_results: 20
+
+# ── Temporal / as-of queries ─────────────────────────────────────────────────
+# When OrgMemBench passes as_of="YYYY-MM-DD" the adapter constructs a
+# SearchFilters with:
+#
+#   valid_at  <= T          (fact had begun by T)
+#   invalid_at > T  OR  IS NULL   (fact had not ended by T)
+#
+# This is a "valid-time slice" — it answers "what was true on date T?"
+# Graphiti exposes this through SearchFilters + DateFilter + ComparisonOperator.
+# See: graphiti_core/search/search_filters.py
+#
+# No extra config needed; controlled entirely by the as_of argument at query time.

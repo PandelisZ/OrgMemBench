@@ -1,0 +1,367 @@
+%==============================================================================
+% Appendix: Datasheet for Datasets (Gebru et al., 2021)
+% Standalone section file. Included after the main body inside the \appendix
+% block opened by main.tex (do NOT re-issue \appendix here, or the appendix
+% counter resets and the datasheet is renumbered ahead of the other appendices).
+%==============================================================================
+
+\section{Datasheet for Datasets}
+\label{app:datasheet}
+
+Following the documentation framework of Gebru et al.~\citep{gebru2021datasheets},
+we answer the standard datasheet questions for the \bench{} corpus. The seven
+labeled subsections below cover motivation, composition, the collection and
+generation process, preprocessing and cleaning (including a complete known-errors
+list), intended uses, distribution, and maintenance. All counts are taken
+directly from the released artifacts on disk.
+
+%------------------------------------------------------------------------------
+\subsection{Motivation}
+%------------------------------------------------------------------------------
+
+\textbf{For what purpose was the dataset created?}
+\bench{} was created to measure \emph{long-horizon organizational memory} in AI
+agents: the ability to answer everyday questions about an organization
+(``when did we change enterprise pricing?'', ``who owns the Acme relationship?'',
+``what did engineering decide about the migration last quarter, and has that
+changed?'') by stitching evidence across channels, across people, and across
+time. Existing memory benchmarks (LoCoMo, LongMemEval, MemBench,
+MemoryAgentBench, HaluMem) are conversational or personal-scale, cap at roughly
+$200\text{K}$--$1\text{M}$ tokens of mostly two-party dialogue, and are already
+saturating, with leading systems exceeding $90\%$. No public benchmark measures
+the organizational regime: multi-source, multi-author, multi-channel corpora at
+the scale a company accumulates over years, where the answer to a question may
+have been superseded, corrected, or never written down explicitly. \bench{}
+targets precisely that gap.
+
+\textbf{Who created the dataset and on whose behalf?}
+The dataset was created by the authors of this paper as part of the \bench{}
+benchmark effort.
+
+\textbf{Who funded the creation of the dataset?}
+Generation used a single locally served open-weight model
+(\texttt{gpt-oss:20b}, served via Ollama at an internal endpoint), so corpus
+generation incurred no external API spend; evaluation of the four public memory
+systems used the authors' own vendor accounts and API credits. No external grant
+funded the dataset.
+
+%------------------------------------------------------------------------------
+\subsection{Composition}
+%------------------------------------------------------------------------------
+
+\textbf{What do the instances represent?}
+The dataset describes a single, fully fictional organization, \emph{Helix
+Logistics}, a small-to-mid SaaS/freight-tech company with a multi-year narrative
+arc (founded 2020; Helix API in 2021; Series A and a B2C$\rightarrow$mid-market
+pivot in 2022; a 2023 customer escalation, layoff, and COO change; Helix AI
+Optimizer in 2024; a documentation overhaul in 2025; a planned Series B in 2026).
+There are two instance types. (i)~\emph{Corpus artifacts}: individual
+documents/threads from one channel (Slack threads, email threads, meeting notes,
+meeting transcripts, incident reports, postmortems, ADRs, Notion docs, and CRM
+entries), each carrying a structured header (\texttt{slot\_id},
+\texttt{event\_id}, genre, author persona, date, witness \texttt{role}, and
+\texttt{testimony\_type}). (ii)~\emph{Questions}: natural-language queries with a
+category-specific structured ground-truth answer, weighted rubric subpoints,
+evidence-artifact citations, and metadata. A separate \texttt{personas.jsonl}
+registry and a \texttt{source\_of\_truth/\{events,relations\}.jsonl} graph
+support both.
+
+\textbf{How many instances are there in total?}
+\bench{} ships three scale tiers of the Helix corpus. The \textbf{small} tier
+contains $17$ events ($121$ corpus artifacts) and $11$ questions. The
+\textbf{medium} tier contains $157$ events and $443$ corpus artifacts and $73$
+questions. The \textbf{large} tier contains $113$ questions over a
+multi-million-token corpus. Per-genre artifact counts and the role
+(primary/secondary witness) and testimony (\texttt{direct}/\texttt{inferred})
+splits are tabulated in Appendix~\ref{sec:design:personas}; most facts must be
+triangulated from secondary, partly inferential sources rather than read off a
+single canonical record. The persona registry holds $72$ personas, each with a
+dated role history, voice markers, signature phrases, channel-mix probabilities,
+and founder / long-tail flags. XL and XXL tiers, and additional companies of
+other sizes and verticals, are planned but not part of this release.
+
+\textbf{Does each instance contain labels or ground truth?}
+Yes. Every question carries a category-specific structured
+\texttt{ground\_truth\_answer} that is a deterministic projection of the
+source-of-truth graph (not a string recalled by the generating model), plus
+weighted \texttt{rubric\_subpoints}; the full per-category field schema
+(C1--C6) is given in Appendix~\ref{sec:design:rubric}. The small and medium
+tiers cover exactly these six
+categories (C1--C6). A further EMERGENT category (de-facto patterns never stated
+as an explicit rule, with multi-facet answers) is evaluated only at the large
+tier and above, where a deep behavioural corpus is needed for the patterns to be
+reconstructable; it is out of scope for the small and medium tiers in this paper.
+Each question also carries three paraphrases of its text, and the
+\texttt{rubric\_subpoints} above are weighted for facet-coverage scoring.
+
+\textbf{Is any information missing from individual instances?}
+A small number of citations are known to be unresolvable and are flagged in the
+errata (see \emph{Preprocessing/Cleaning} below); these are documented rather
+than silently dropped. The EMERGENT question category is out of scope for the
+small and medium tiers in this paper and is evaluated only at the large tier and
+above; the small corpus still physically retains its emergent-evidence background
+documents (kept as benign background noise), but the emergent \emph{questions}
+were removed from the small tier, so no EMERGENT questions appear in either the
+small or medium release here.
+
+\textbf{Are relationships between instances made explicit?}
+Yes. Corpus artifacts are grouped into event folders (\texttt{EV-YYYY-NNN/}),
+multiple artifacts may witness the same event from different angles and channels,
+and each question's \texttt{evidence\_artefact\_ids} field ties its answer to the
+specific artifacts that license it. The \texttt{source\_of\_truth} graph encodes
+bi-temporal relations (supersessions, corrections, contradictions) between facts.
+
+\textbf{Are there recommended data splits?}
+The dataset is structured as difficulty/scale tiers (small / medium / large)
+rather than train/validation/test splits, because it is an evaluation-only
+benchmark: there is no training set. We report results per tier.
+
+\textbf{Is the dataset self-contained?}
+Yes. The full Helix corpus, ground truth, persona registry, and source-of-truth
+graph are vendored in-repo under \texttt{datasets/helix/\{small,medium,large\}/}.
+It does not link to or depend on any external resource.
+
+\textbf{Does the dataset contain confidential or offensive content, or data
+relating to identifiable people?}
+No. The organization, its employees, customers, events, and all artifact text
+are entirely fictional and machine-generated. No real company's communications
+and no real individuals' data appear in the dataset, so there is no personally
+identifiable information and no confidentiality risk.
+
+%------------------------------------------------------------------------------
+\subsection{Collection / Generation Process}
+%------------------------------------------------------------------------------
+
+\textbf{How was the data acquired?}
+The Helix corpus is \emph{entirely synthetic}; no human wrote any Helix email,
+Slack message, transcript, ADR, or ticket. Every artifact was produced by
+parameterized prompts sent to a single locally served open-weight model
+(\texttt{gpt-oss:20b}). A six-stage pipeline (\texttt{helix-corpus}) runs in a
+fixed order so that ground truth is fixed \emph{before} any natural-language text
+is generated:
+
+\begin{itemize}
+  \item \textbf{Stage A --- Company canon.} Instantiates the fictional company:
+    founders, multi-year growth arcs, an $80$--$90$ person persona registry with
+    dated roles, customer arcs, documentation-discipline eras, and a tooling
+    timeline with explicit replacements (e.g., Salesforce replaces HubSpot in
+    2022-Q1; Confluence replaces Notion in 2023-Q1). This is the only layer a
+    human configured, by choosing scale parameters (company size, year range,
+    team topology).
+  \item \textbf{Stage B --- Source-of-truth graph.} Generates the ground-truth
+    event log and bi-temporal relation graph (supersessions, corrections,
+    contradictions). All downstream answers are projected deterministically from
+    this graph; the model never invents a ground truth during question
+    generation.
+  \item \textbf{Stage C --- Corpus.} Generates a cluster of two to three
+    artifacts per event across the genre taxonomy, each with a structured header.
+  \item \textbf{Stage D --- Cross-references and noise injection.} Adds
+    cross-artifact references and realistic distractor content (drafts,
+    half-finished threads, contradictions among secondary witnesses), recording
+    every injected distractor in \texttt{noise\_manifest.jsonl}.
+  \item \textbf{Stage E --- Question generation.} Produces questions whose
+    answers are derived from the Stage B graph; the model's role is phrasing,
+    not answer invention.
+  \item \textbf{Stage F --- Self-consistency validation.} Reviews output for
+    answerability, rubric coherence, and distractor integrity, emitting a
+    \texttt{validation\_report.jsonl}; passing questions become
+    \texttt{benchmark\_v0.0.jsonl}.
+\end{itemize}
+
+\textbf{What is the bi-temporal model?}
+Every event/fact in the source-of-truth graph carries four timestamps:
+\texttt{valid\_at} (became true in the world), \texttt{invalid\_at} (stopped
+being true), \texttt{ingested\_at} (recorded by the organization), and
+\texttt{expired\_at} (record retracted or corrected). Facts are invalidated,
+never deleted, preserving a no-loss audit trail; supersession links connect an
+old fact to its replacement with an explicit reason; and questions can ask what
+the organization believed \texttt{as\_of} a past date, distinct from what is
+true now. The harness is capability-aware: a system that by design cannot answer
+as-of-date temporal queries is reported N/A for that category rather than
+silently scored zero.
+
+\textbf{Were any ethical review processes conducted?}
+No human-subjects review was required: the data is fully synthetic and contains
+no real individuals or organizations.
+
+\textbf{Known methodological limitation (circularity).}
+Single-model end-to-end generation is circular by construction: the same model
+writes the artifacts, the questions, and the answers, and validates them.
+Structural defenses (closed-enum event types, graph-projected rather than
+model-recalled answers, multi-pass critique, and automated sentinels for persona
+consistency and anachronism) reduce but do not eliminate this circularity. The
+README acknowledges this explicitly, and a cross-model validation pass (a
+different model family as validator) is planned for a future revision.
+
+%------------------------------------------------------------------------------
+\subsection{Preprocessing / Cleaning / Labeling}
+%------------------------------------------------------------------------------
+
+Because ground truth is projected from the source-of-truth graph rather than read
+back out of free text, label ambiguity is bounded by construction. Post-generation
+audits nonetheless identified six classes of defects, corrected across three audit
+waves. All corrections are logged in the per-tier \texttt{CHANGELOG.md} files, and
+pre-patch snapshots are preserved (\texttt{benchmark\_v0.0.original.jsonl} for the
+small tier; \texttt{benchmark\_v0.0.pre-wave2.jsonl} and
+\texttt{benchmark\_v0.0.pre-wave3.jsonl} for the medium tier), so the audit trail
+is complete. We list the known errors and corrections in full.
+
+\begin{enumerate}
+  \item \textbf{Slot-ID collisions (medium tier).} The Stage C corpus generator
+    reset its per-batch slot-ID counter to \texttt{-001} while the event-ID
+    counter kept advancing, producing $443$ corpus files with only $311$ unique
+    slot IDs ($24$ slot IDs appeared $2$--$10$ times across different event
+    directories). A wave-1 audit renamed $140$ files on disk and in
+    \texttt{corpus\_index.jsonl} (rebuilding the index from scratch) and
+    repointed $35$ question rows whose \texttt{evidence\_artefact\_ids} had
+    resolved to the wrong event cluster. Three slot IDs
+    (\texttt{ART-EV-2023-002-003}, \texttt{ART-EV-2023-006-003},
+    \texttt{ART-EV-2023-066-001}) remained unresolvable because the
+    home-directory artifacts were never generated; those citations were left
+    intact and flagged.
+  \item \textbf{Persona registry gaps and surname cross-contamination.} The
+    generator occasionally fused names across personas (e.g., ``Daniel Patel''
+    for Daniel Ortiz, ``Arjun Patel'' for Arjun Mehta, ``Ethan Patel'' for Ethan
+    Brooks, ``Miguel Alvarez'' for Miguel Torres, ``Luis Hernandez'' for Luis
+    Ramirez). In the small tier, two artifacts referred to a ``Maya Singh'', a
+    generation-time typo for Maya Patel (CEO), confirmed by the absence of any
+    ``Maya Singh'' in the registry and the event date predating the only other
+    Maya. The medium tier had two duplicate display-name collisions (two distinct
+    ``Daniel Kim'' personas; two distinct ``Marco Rossi'' personas); the
+    lower-seniority duplicate in each pair was renamed (\texttt{Daniel R. Kim},
+    \texttt{Marco S. Rossi}). Four personas referenced in artifacts but absent
+    from the registry (P-0009 Omar Al-Jabri, P-0090 Sarah Patel, P-0091 Ethan
+    Kim, P-0092 Emily Carter) were added as stubs. Four ambiguous name
+    occurrences (Marco Ruiz, Kevin Patel, Maya Lin, Luis Martinez) lacked
+    sufficient context for confident assignment and were left unchanged with a
+    flag for future resolution.
+  \item \textbf{Ground-truth-to-corpus label drift (testimony types).}
+    {\sloppy
+    Generator-internal labels (\texttt{"direct\_testimony"},
+    \texttt{"inference"}) diverged from the corpus header convention
+    (\texttt{"direct"}, \texttt{"inferred"}). Ninety field values in the medium
+    tier were normalized ($45$ in \texttt{testimony\_attribution} and $45$ in
+    \texttt{evidence\_summary} strings across $15$ C5 rows); the same fix had
+    been applied earlier to the small tier.\par}
+  \item \textbf{Phantom artifact citations.} Several questions in both tiers
+    cited \texttt{evidence\_artefact\_ids} pointing to slot IDs with no file on
+    disk. In the small tier, two primary artifacts (a postmortem for EV-2022-008
+    and a meeting transcript for EV-2022-013) were entirely absent; both were
+    written and added. In the medium tier, two questions' citation lists were
+    repointed post wave-3 to the correct anchor events after the slot-ID
+    collision fix had made the original citations unresolvable.
+  \item \textbf{Spurious supersession entries and C4 audit-replay integrity
+    (small tier).} A wave-1 audit found that some C4 audit-replay questions cited
+    artifacts that did not exist, and that one question's supersession structure
+    was over-specified into a negative-knowledge test with an empty
+    \texttt{replacements=[]}. Phantom-citation removals were applied to five
+    questions; one question (Q-0010) was rewritten to reward the correct
+    bi-temporal supersession pattern, and another (Q-0011) had its
+    \texttt{resolution\_status} corrected and a rubric criterion inverted.
+  \item \textbf{Natural-language question rewording (small tier).} Eleven small-tier
+    question texts (of the question set as it then stood, prior to deferring the
+    emergent-pattern category to the large tier) contained benchmark-design
+    artifacts that
+    would not appear in natural user queries (``the system's understanding'',
+    ``your statement'', ``your claim'', ``reconstruct the knowledge held by the
+    system''). These were reworded to phrasings a person would actually use. All
+    ground-truth answers and rubric sub-criteria were left unchanged; the prior
+    text for each modified question is preserved at
+    \texttt{metadata.text\_pre\_rewording\_2026\_05\_26}.
+\end{enumerate}
+
+\textbf{Is the raw (pre-cleaning) data available?}
+Yes. Pre-patch snapshots are preserved at every audit wave (filenames above), so
+the raw generated output and each intermediate state remain inspectable alongside
+the corrected release.
+
+%------------------------------------------------------------------------------
+\subsection{Uses}
+%------------------------------------------------------------------------------
+
+\textbf{What tasks is the dataset intended for?}
+\bench{} is an evaluation-only benchmark for long-horizon organizational memory
+in AI agents and memory systems. Its intended use is to measure how well a memory
+system can ingest a multi-source, multi-author, multi-channel organizational
+corpus and then answer questions requiring supersession reasoning, decision
+provenance, bi-temporal (as-of-date) retrieval, audit replay, justification
+chains, and contradiction resolution. Because the tiers form a scaling ladder,
+the dataset is specifically intended to expose the \emph{scaling curve}: how a
+system degrades as the corpus grows from conversational scale to company scale.
+
+\textbf{Has the dataset been used for any tasks already?}
+Yes. In this paper we evaluate four publicly available memory systems on the
+small tier and report a medium-tier result for the strongest of them, under a
+uniform, capability-aware harness with rubric-based scoring.
+
+\textbf{Is there anything that should not be done with the dataset?}
+The dataset must not be used as \emph{training} data for any system that will be
+evaluated on it; doing so would place the corpus in that system's training data
+and invalidates results. It should not be treated as a source of factual
+knowledge about any real company (all content is fictional), and reported scores
+should always state the tier, the system configuration, and the capability-aware
+N/A handling, because aggregate scores are not comparable across different
+harness settings.
+
+\textbf{Are there tasks for which the dataset should not be used?}
+{\sloppy
+It is not a conversational or personal-memory benchmark and should not be
+compared head-to-head against LoCoMo/LongMemEval-style results, which measure a
+different (and now largely saturated) regime.\par}
+
+%------------------------------------------------------------------------------
+\subsection{Distribution}
+%------------------------------------------------------------------------------
+
+\textbf{How will the dataset be distributed?}
+The full Helix corpus and ground truth are distributed in the public project
+repository at \url{https://github.com/JackCGardner/OrgMemBench} under
+\texttt{datasets/helix/}, which is the single authoritative copy; all tiers live
+in-repo.
+
+\textbf{Under what license is the dataset distributed?}
+The \textbf{dataset} is released under \textbf{Creative Commons Attribution 4.0
+(CC BY 4.0)} (see \texttt{datasets/LICENSE},
+\texttt{SPDX-License-Identifier: CC-BY-4.0}). The accompanying \textbf{evaluation
+harness and code} are released under the \textbf{MIT License}.
+
+\textbf{Are there third-party IP or usage restrictions?}
+No. The data is entirely synthetic and original to this project; there are no
+third-party copyright, license, or usage restrictions on the artifact text, and
+no proprietary content is embedded.
+
+\textbf{When will the dataset be distributed?}
+The benchmark, harness, and a planned public leaderboard are released with this
+paper, on GitHub, to support reproducible progress.
+
+%------------------------------------------------------------------------------
+\subsection{Maintenance}
+%------------------------------------------------------------------------------
+
+\textbf{Who will maintain the dataset?}
+The dataset is maintained by the authors via the project repository. Issues,
+errata reports, and questions can be filed through the repository's issue
+tracker.
+
+\textbf{Will the dataset be updated, and how will updates be communicated?}
+{\sloppy
+Yes. The dataset is versioned (\texttt{benchmark\_v0.0.jsonl}), and every
+correction is recorded in per-tier \texttt{CHANGELOG.md} files with pre-patch
+snapshots preserved. Planned updates include the large-tier and above EMERGENT
+questions (the only tiers in which that category is in scope), the XL/XXL scale
+tiers, additional companies of other sizes
+and verticals for generalization claims, and a cross-model validation pass.
+Updates will be communicated through the repository changelog and tagged GitHub
+releases.\par}
+
+\textbf{Will older versions continue to be supported?}
+Yes. Pre-patch snapshots and version-suffixed benchmark files are retained in the
+repository so prior versions remain reproducible, and the changelog documents
+what changed between versions.
+
+\textbf{If others want to extend or contribute to the dataset, is there a
+mechanism to do so?}
+Yes. Because the generation pipeline (\texttt{helix-corpus}, Stages A--F) and the
+source-of-truth graph format are part of the release, contributors can generate
+additional companies or tiers following the documented stages and submit them
+through the repository.

@@ -1,0 +1,103 @@
+%==============================================================================
+% 4. BASELINE SYSTEMS
+%   Demoted to a \subsection and relocated to the front of Experiments; the
+%   enclosing \section{Experiments} and the \input ordering are wired in
+%   main.tex. Architecture prose lives in \S\ref{sec:related:systems} and
+%   Table~\ref{tab:baseline-config}; the answerer/judge policy lives in
+%   \S\ref{sec:exp:setup}. This file keeps only eval-relevant deltas + the
+%   config table.
+%==============================================================================
+\subsection{Baseline Systems}
+\label{sec:baselines}
+
+We evaluate the four memory systems that are publicly available and can be run
+end-to-end against an external corpus: \texttt{gbrain}, \texttt{zep-cloud}
+(Zep/Graphiti), \texttt{mem0-platform} (Mem0 hosted), and \texttt{graphify-oss}.
+Their architectures are described in \S\ref{sec:related:systems} and summarized
+in Table~\ref{tab:baseline-config}; here we record only the choices that bear on
+the evaluation---version pin, native-versus-shared answerer, ingest mode and
+readiness drain, and the single mechanism that explains each system's score.
+Scoring and answer synthesis are held constant across baselines per the answerer
+policy in \S\ref{sec:exp:setup}. Full pins, drain recipes, and the
+controlled-extractor probe are in Appendix~\ref{app:hyperparams}.
+
+\paragraph{\texttt{gbrain} (\texttt{0.41.6.0}).}
+Evaluated end-to-end with its native \texttt{think} synthesizer per the answerer
+policy (\S\ref{sec:exp:setup}); ingestion is synchronous, so no readiness drain
+is required.
+
+\paragraph{\texttt{zep-cloud} (\texttt{3.22.0}).}
+Run on the FREE plan~\citep{zep_graphiti_2025}; both its extractor and embeddings
+are hosted and undisclosed, so they are part of the system under test rather than
+parameters we control. Retrieved edges are routed through the shared neutral
+answerer (it has no native one), and because ingestion is asynchronous a
+probe-edge readiness drain (1800\,s) precedes querying.
+
+\paragraph{\texttt{mem0-platform} (\texttt{2.0.2}).}
+Run on the FREE plan~\citep{mem0_2024}; the shipped product uses an
+\emph{undisclosed, non-configurable server-side extractor} (not Sonnet), so the
+extractor is fixed by the vendor and evaluated as-is---the principal explanation
+for its result. Results are routed through the shared neutral answerer, and as
+with \texttt{zep-cloud} the asynchronous ingest demands a probe-search readiness
+drain (900\,s; the choice of drain is itself a methodological finding,
+\S\ref{sec:exp:readiness}).
+
+\paragraph{\texttt{graphify-oss} (\texttt{0.8.20}).}
+Extraction uses an LLM whose upstream-hardcoded default is Claude Sonnet~4.6,
+matching our cross-system model; retrieved subgraphs go through the shared neutral
+answerer; ingestion is synchronous with no drain. Its extraction is coarse and
+document-granular---roughly \emph{one node per artifact}---the observation we
+return to in the analysis.
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{Baseline system configurations.} All systems are evaluated with
+    the same Claude Sonnet~4.6 judge (extended thinking) and, except for
+    \texttt{gbrain} (which uses its native \texttt{think} synthesizer), the same
+    Claude Sonnet~4.6 neutral answerer. ``Extractor / synth.\ LLM'' is the model
+    used for the memory-side processing under our control; ``hosted'' marks a
+    component that is server-side and undisclosed. Top-$K=10$ wherever
+    configurable. The bottom row is a controlled-extractor \emph{probe}, not the
+    shipped product, and appears only in the appendix.}
+  \label{tab:baseline-config}
+  \small
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{@{}llllll@{}}
+    \toprule
+    System & Version & Memory model & Extractor / synth.\ LLM & Embeddings & Ingest / readiness gate \\
+    \midrule
+    \texttt{gbrain}
+      & \texttt{0.41.6.0}
+      & hybrid BM25+vector+graph
+      & Sonnet 4.6 (native \texttt{think})
+      & ZeroEntropy \texttt{zembed-1}
+      & sync; no drain \\
+    \texttt{zep-cloud}
+      & \texttt{3.22.0}
+      & bi-temporal knowledge graph
+      & hosted (undisclosed)
+      & hosted (undisclosed)
+      & async; probe-edge drain, 1800\,s \\
+    \texttt{mem0-platform}
+      & \texttt{2.0.2}
+      & extracted memories + vector
+      & hosted (undisclosed)
+      & hosted (undisclosed)
+      & async; probe-search drain, 900\,s \\
+    \texttt{graphify-oss}
+      & \texttt{0.8.20}
+      & keyword-BFS graph
+      & Sonnet 4.6 (upstream default)
+      & none (pure BFS/DFS)
+      & sync; no drain \\
+    \midrule
+    \textit{probe:} Mem0 OSS
+      & \texttt{2.0.2}
+      & extracted memories + vector
+      & Sonnet 4.6 (controlled)
+      & \texttt{text-embedding-3-small}
+      & sync; no drain \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}

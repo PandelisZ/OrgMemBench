@@ -1,0 +1,146 @@
+%==============================================================================
+% 3. OrgMemBench Design  (the core contribution)
+%==============================================================================
+\section{\bench{} Design}
+\label{sec:design}
+
+\subsection{Overview: Goals and Scope}
+\label{sec:design:overview}
+
+\bench{} is designed to measure one capability that existing benchmarks do not
+reach: an agent's ability to answer everyday organizational questions over a
+multi-source, multi-author, multi-year record of work. Concretely, the target
+queries are the kind a person routinely routes to an assistant with access to
+the company's history---``who owns the Acme relationship, and where was that
+established?'', ``what did engineering decide about the migration last quarter,
+and has that changed?''
+Answering these requires stitching evidence across channels (email, Slack,
+meeting transcripts, tickets, documents, CRM entries), across people whose roles
+and seniority shift over time, and across time itself---including facts that
+were later superseded, corrected, held in unresolved contradiction, or never
+written down explicitly as a rule. The benchmark is built around four design
+principles that follow from this target: ground truth is projected
+deterministically from a known source-of-truth graph rather than read back out
+of free text; the temporal model is bi-temporal so that ``what was true then''
+can be separated from ``what the organization recorded, and when''; scoring is
+rubric-based facet coverage rather than exact match, so that multiple correct
+phrasings earn credit while omissions are penalized deterministically; and the
+harness is \emph{capability-aware}, reporting a category as not-applicable for a
+system whose design cannot in principle answer it (for example, an as-of-date
+temporal query posed to a system with no temporal model) rather than silently
+scoring it zero.
+
+It is equally important to state what \bench{} does \emph{not} test. It is not a
+conversational or personal-memory benchmark (the regime LoCoMo, LongMemEval, and
+BEAM cover); the full scope boundaries are enumerated in
+\S\ref{app:construction}.
+
+\subsection{The Helix Organization and the Bi-temporal Model}
+\label{sec:design:helix}
+
+The seed organization is \textbf{Helix Logistics}, a small-to-mid-size
+SaaS/freight-tech company instantiated with a coherent multi-year narrative arc:
+founded in 2020 by Maya Patel and Daniel Kim, it ships its API and pivots toward
+mid-market, weathers a customer escalation and reorganization, and overhauls its
+documentation, across a dated 2020--2026 timeline. A fixed company skeleton pins
+the founding year, founders, per-year arcs, documentation-discipline eras,
+product lines, and a tooling timeline with explicit replacements (for example,
+Salesforce replaces HubSpot and Confluence replaces Notion in successive years);
+those replacements are not decoration---they seed the temporal and supersession
+structure that the hard question categories then probe. The full company
+skeleton is enumerated in \S\ref{app:construction}.
+
+The substrate that makes this possible is a \textbf{bi-temporal}
+source-of-truth graph. Every event and fact carries four timestamps:
+\texttt{valid\_at} (when it became true in the world), \texttt{invalid\_at}
+(when it stopped being true), \texttt{ingested\_at} (when the organization
+recorded it), and \texttt{expired\_at} (when that record was retracted or
+corrected). Two timelines therefore coexist---\emph{valid time} (the world) and
+\emph{transaction time} (the record)---and a question can interrogate either or
+both. Facts are \textbf{invalidated, never deleted}, which preserves a no-loss
+audit trail: the prior state of any fact remains recoverable alongside its
+replacement. When one fact replaces another, a \textbf{supersession link}
+connects the old fact to the new one together with an explicit \emph{reason}, so
+the change is not merely detectable but explainable. Finally, the model supports
+\textbf{\texttt{as\_of} date-travel}: a query can reconstruct what the
+organization believed on a specified past date, which is distinct from what is
+true now. This structure licenses the C1/C3/C4 categories below.
+
+\subsection{Question Taxonomy}
+\label{sec:design:taxonomy}
+\label{sec:design:questions}
+
+{\sloppy
+Each tier ships a versioned question set spanning six structured categories
+(C1--C6; Table~\ref{tab:categories}), each isolating a distinct reasoning pattern
+and pinned to the facets a correct answer must recover. A seventh,
+\textsc{Emergent}, category (reconstructing a de-facto pattern never written down
+as an explicit rule) is deferred to the large tier and is out of scope here. The
+small tier poses $11$ questions over a $121$-artifact corpus ($\approx$60K
+tokens); the medium tier poses $73$ questions over $443$ artifacts
+($\approx$200K tokens)---the unit of scale being the corpus a system must ingest
+and retrieve over, not the question count alone. Question counts per category and
+tier are given in Appendix~\ref{app:construction}
+(Table~\ref{tab:design:counts}).
+\par}
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{Category definitions.} The six structured categories
+    evaluated at the small and medium tiers. A seventh category, emergent
+    pattern, is evaluated only at the large tier and above and is out of scope
+    here.}
+  \label{tab:categories}
+  \begin{tabular}{l l p{0.46\textwidth}}
+    \toprule
+    Code & Name & What it tests \\
+    \midrule
+    C1 & Supersession        & The current value of a fact plus what it
+                               replaced, when, and why. Example: \emph{``What is
+                               the data-retention policy now, what did it
+                               replace, and what drove the change?''} \\
+    C2 & Decision provenance & Who decided, when, what alternatives were
+                               weighed, and the deciding rationale. Example:
+                               \emph{``Who chose the cloud-native migration and
+                               what options were rejected?''} \\
+    C3 & Bi-temporal (as-of) & What the organization believed AS OF a past date,
+                               distinct from now. Example: \emph{``What would the
+                               answer have been on 2022-01-15?''} \\
+    C4 & Audit replay        & Reconstruct the knowledge state at a past date and
+                               flag what has since changed. \\
+    C5 & Justification chain & Enumerate the evidence supporting a conclusion and
+                               classify each as direct testimony vs. inference. \\
+    C6 & Contradiction       & Detect that two artifacts conflict; report both
+                               sides and whether it was resolved. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The ground-truth and rubric field schemas, the $72$-persona library and
+document-genre taxonomy, and the artifact counts behind these question sets are
+detailed in Appendix~\ref{app:construction}.
+
+\subsection{Synthetic Generation}
+\label{sec:design:why-synthetic}
+\label{sec:generation}
+\label{sec:design:generation}
+
+The data is synthetic by deliberate design: a freshly generated fictional
+organization cannot appear in any system's pretraining data or retrieval cache, so
+a high score cannot be explained by memorization---a stronger guarantee than
+post-hoc $n$-gram decontamination, which can only estimate leakage that has
+already occurred (the further reasons of control and privacy are developed in
+Appendix~\ref{app:construction}). Ground-truth labels are deterministic
+projections of the source-of-truth graph rather than free-text recall, which
+sharply limits label ambiguity but does not remove the single-model circularity
+inherent in one model writing the artifacts, phrasing the questions, and running
+the self-consistency check; following \citet{gebru2021datasheets} we document
+this rather than obscure it (in a full datasheet, Appendix~\ref{app:datasheet}),
+and a cross-model validation pass is planned. We accompany the release with
+Croissant metadata~\citep{croissant2024} so the dataset is machine-discoverable
+and ML-ready. The \texttt{helix-corpus} generation tooling (a single local
+\texttt{gpt-oss:20b} model served via Ollama), the full Stage~A--F pipeline, and
+the logged, reversible three-wave manual audit that reconciled shipped files with
+the graph without altering the answer key are detailed in
+Appendix~\ref{app:construction}; the audit log and its six defect classes in
+Appendix~\ref{app:annotation}.

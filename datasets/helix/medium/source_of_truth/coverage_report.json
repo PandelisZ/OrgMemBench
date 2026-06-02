@@ -1,0 +1,18 @@
+{
+  "size": "medium",
+  "total_events": 157,
+  "per_category": {
+    "C2": 24,
+    "C5": 19,
+    "C1": 33,
+    "C6": 34,
+    "C3": 3,
+    "C4": 2
+  },
+  "per_year": {
+    "2023": 152,
+    "2024": 5
+  },
+  "total_relations": 57,
+  "per_category_target": 50
+}
