@@ -1,0 +1,30 @@
+name: Data issue (corpus / ground truth)
+description: Report a question whose gold answer looks wrong, or a corpus inconsistency.
+labels: ["data"]
+body:
+  - type: input
+    id: qid
+    attributes:
+      label: Question id
+      placeholder: "Q-0007"
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      options:
+        - small
+        - medium
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: >-
+        Describe the issue and, where you can, the corpus artifact id(s) or source-of-truth event
+        involved. Ground truth is projected deterministically from the graph, so most issues trace
+        to a specific event or relation.
+    validations:
+      required: true

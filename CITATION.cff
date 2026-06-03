@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use OrgMemBench, please cite it as below."
+title: "OrgMemBench: A Benchmark for Long-Horizon Organizational Memory in AI Agents"
+abstract: >-
+  A synthetic, multi-author, multi-channel, bi-temporal benchmark for long-horizon organizational
+  memory in AI agents, with deterministic ground truth projected from a known source-of-truth graph,
+  a uniform evaluation harness over publicly available memory systems, and small and medium tiers.
+type: software
+authors:
+  - family-names: Gardner
+    given-names: Jack
+year: 2026
+license: MIT
+url: "https://github.com/JackCGardner/OrgMemBench"
+repository-code: "https://github.com/JackCGardner/OrgMemBench"
+keywords:
+  - organizational memory
+  - long-horizon memory benchmark
+  - bi-temporal knowledge graph
+  - AI agent memory
+  - temporal reasoning evaluation

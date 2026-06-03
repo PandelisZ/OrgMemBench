@@ -1,0 +1,26 @@
+name: Add / request a system
+description: Propose evaluating a memory system on OrgMemBench.
+labels: ["new-system"]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System name and link
+      placeholder: "e.g. mem0 — https://github.com/mem0ai/mem0"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: How does it ingest and retrieve?
+      description: >-
+        Briefly, so we can scope an adapter (ingest path, retrieval interface, whether it has a
+        native answerer). To write the adapter yourself, see docs/CONTRIBUTING-AN-ADAPTER.md.
+    validations:
+      required: false
+  - type: checkboxes
+    id: offer
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to write the adapter and open a PR.

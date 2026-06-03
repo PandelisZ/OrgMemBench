@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install harness (core)
+        run: pip install -e .
+      - name: Import + CLI
+        run: |
+          python -c "import orgmembench, orgmembench.adapters.registry; print('import ok')"
+          orgmembench list
+      - name: Corpus stats (offline, no token spend)
+        run: |
+          orgmembench stats --tier small
+          orgmembench stats --tier medium

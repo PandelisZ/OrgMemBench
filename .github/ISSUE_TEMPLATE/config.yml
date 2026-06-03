@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussion
+    url: https://github.com/JackCGardner/OrgMemBench/discussions
+    about: Ask a question or discuss the benchmark, methodology, or results.
