@@ -186,13 +186,19 @@ def run_system(
                 "Run %s/%s: processing %d pending question(s) with parallel=%d",
                 system, tier, len(pending), max_workers,
             )
-            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            pool = ThreadPoolExecutor(max_workers=max_workers)
+            try:
                 futures = {pool.submit(process_one, q): q for q in pending}
                 for fut in as_completed(futures):
                     q = futures[fut]
                     qr, jr = fut.result()
                     completed[q.id] = (qr, jr)
                     record_checkpoint(cp, qr, jr)
+            finally:
+                # If a worker raised, cancel questions that haven't started yet so a
+                # failed parallel run stops spending tokens on results we'd discard.
+                # No-op on the happy path: every future is already done by here.
+                pool.shutdown(wait=True, cancel_futures=True)
     finally:
         if cp is not None:
             cp.close()
